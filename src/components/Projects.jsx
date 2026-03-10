@@ -2,6 +2,17 @@ import { motion } from "framer-motion";
 
 const projects = [
   {
+    title: "Title Verification System 🚀",
+    description:
+      "High-performance, AI-powered microservices system for verifying publication titles using phonetic (Soundex/Metaphone) and NLP semantic search (FAISS + Sentence Transformers).",
+    tech: ["React", "Node.js", "Python", "Flask", "PostgreSQL", "Docker"],
+    impact:
+      "Automated compliance validation for ~160,000 titles, preventing duplicates and conceptually similar entries.",
+    live: "https://title-verification-system.netlify.app",
+    github: "https://github.com/papneetswain4-alt/title-verification-system",
+    featured: true
+  },
+  {
     title: "Dev Tracker (MERN)",
     description:
       "Full-stack productivity app with JWT authentication, streak tracking, analytics charts, and GitHub-style heatmap.",

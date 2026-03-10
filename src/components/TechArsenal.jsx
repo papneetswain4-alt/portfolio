@@ -3,6 +3,8 @@ import {
   FaJava,
   FaReact,
   FaNodeJs,
+  FaPython,
+  FaDocker,
   FaGitAlt,
   FaGithub,
   FaHtml5,
@@ -11,7 +13,7 @@ import {
   FaDatabase
 } from "react-icons/fa";
 
-import { SiC, SiMysql, SiExpress } from "react-icons/si";
+import { SiC, SiMysql, SiExpress, SiFlask, SiPostgresql } from "react-icons/si";
 
 export default function TechArsenal() {
   const tech = [
@@ -24,6 +26,10 @@ export default function TechArsenal() {
     { icon: <FaNodeJs />, name: "Node.js" },
     { icon: <SiExpress />, name: "Express.js" },
     { icon: <SiMysql />, name: "MySQL" },
+    { icon: <FaPython />, name: "Python" },
+    { icon: <SiFlask />, name: "Flask" },
+    { icon: <SiPostgresql />, name: "PostgreSQL" },
+    { icon: <FaDocker />, name: "Docker" },
     { icon: <FaGitAlt />, name: "Git" },
     { icon: <FaGithub />, name: "GitHub" },
     { icon: <FaDatabase />, name: "DBMS" }
