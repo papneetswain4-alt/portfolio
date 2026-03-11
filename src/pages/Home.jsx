@@ -1,9 +1,11 @@
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import About from "../components/About";
-import Projects from "../components/Projects";
-import Contact from "../components/Contact";
 import TechArsenal from "../components/TechArsenal";
+import Projects from "../components/Projects";
+import GitHubActivity from "../components/GitHubActivity";
+import Contact from "../components/Contact";
+import Footer from "../components/Footer";
 
 export default function Home({ startHero }) {
   return (
@@ -11,9 +13,11 @@ export default function Home({ startHero }) {
       <Navbar />
       <Hero startHero={startHero} />
       <About />
-      <Projects />
       <TechArsenal />
+      <Projects />
+      <GitHubActivity />
       <Contact />
+      <Footer />
     </>
   );
 }
