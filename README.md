@@ -93,7 +93,7 @@ I'm **Papneet Swain**, a B.Tech Computer Science Engineering student passionate 
 ## 📫 Connect with Me
 
 - 🌐 Portfolio: https://spidey-portfolio.netlify.app/
-- 💼 LinkedIn: *(Add your LinkedIn profile)*
+- 💼 LinkedIn: https://www.linkedin.com/in/papneet-swain-92a2b9343
 - 💻 GitHub: https://github.com/papneetswain4-alt
 
 ---
