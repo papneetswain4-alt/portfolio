@@ -73,13 +73,6 @@ Run the development server
 npm run dev
 ```
 
----
-
-## 📸 Screenshots
-
-> Add screenshots of your portfolio here.
-
----
 
 ## 📈 Future Improvements
 
