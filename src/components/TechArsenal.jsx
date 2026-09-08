@@ -129,7 +129,7 @@ const SkillCard = ({ item }) => {
           )
         }}
       />
-      
+
       {/* Content moved forward in Z space for 3D POP */}
       <div style={{ transform: "translateZ(30px)", display: "flex", flexDirection: "column", alignItems: "center", pointerEvents: "none" }}>
         {item.icon}
