@@ -42,8 +42,6 @@ function App() {
       velY = e.clientY - mouseY;
       mouseX = e.clientX;
       mouseY = e.clientY;
-
-      cursor.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0) translate(-50%, -50%)`;
     };
 
     document.addEventListener("mousemove", moveCursor);
@@ -57,22 +55,20 @@ function App() {
     
     window.addEventListener("scroll", handleScroll);
 
+    let dotX = mouseX;
+    let dotY = mouseY;
+
     function animate() {
-      // Lerp for smooth follow
-      outlineX += (mouseX - outlineX) * 0.15;
-      outlineY += (mouseY - outlineY) * 0.15;
+      // Fast lerp for the central dot
+      dotX += (mouseX - dotX) * 0.35;
+      dotY += (mouseY - dotY) * 0.35;
 
-      // Velocity decay
-      velX *= 0.8;
-      velY *= 0.8;
-      
-      // Calculate squash and stretch based on velocity
-      const velocity = Math.sqrt(velX * velX + velY * velY);
-      const scaleX = Math.min(1 + velocity * 0.004, 1.5);
-      const scaleY = Math.max(1 - velocity * 0.002, 0.5);
-      const angle = Math.atan2(velY, velX) * (180 / Math.PI);
+      // Slower lerp for the subtle outer ring (creates the trailing effect)
+      outlineX += (mouseX - outlineX) * 0.12;
+      outlineY += (mouseY - outlineY) * 0.12;
 
-      outline.style.transform = `translate3d(${outlineX}px, ${outlineY}px, 0) translate(-50%, -50%) rotate(${angle}deg) scale(${scaleX}, ${scaleY})`;
+      cursor.style.transform = `translate3d(${dotX}px, ${dotY}px, 0) translate(-50%, -50%)`;
+      outline.style.transform = `translate3d(${outlineX}px, ${outlineY}px, 0) translate(-50%, -50%)`;
 
       requestAnimationFrame(animate);
     }

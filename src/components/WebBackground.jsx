@@ -1,147 +1,299 @@
-import { useEffect, useRef } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Points, PointMaterial, Float } from "@react-three/drei";
+import { useMemo, useRef } from "react";
+import * as THREE from "three";
 
-export default function WebBackground() {
-  const canvasRef = useRef(null);
+/* =====================================================
+   LAYER 1: BACKGROUND STARS (Deepest, Slowest Parallax)
+===================================================== */
+function BackgroundStars() {
+  const pointsRef = useRef();
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d", { alpha: false }); // Optimize performance
-
-    let width = (canvas.width = window.innerWidth);
-    let height = (canvas.height = window.innerHeight);
-
-    // Mouse interactive forces
-    const mouse = { x: -1000, y: -1000, radius: 150 };
-
-    const handleMouseMove = (e) => {
-      mouse.x = e.clientX;
-      mouse.y = e.clientY;
-    };
-    
-    const handleMouseLeave = () => {
-      mouse.x = -1000;
-      mouse.y = -1000;
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseleave", handleMouseLeave);
-
-    // Node Physics class
-    class Node {
-      constructor(x, y) {
-        this.x = x;
-        this.y = y;
-        this.baseX = x;
-        this.baseY = y;
-        this.size = Math.random() * 1.5 + 0.5;
-        this.density = Math.random() * 20 + 5;
-        this.vx = 0;
-        this.vy = 0;
-      }
-
-      update() {
-        // Distance between mouse and node
-        let dx = mouse.x - this.x;
-        let dy = mouse.y - this.y;
-        let distance = Math.sqrt(dx * dx + dy * dy);
-
-        // Repel force
-        let forceDirectionX = dx / distance;
-        let forceDirectionY = dy / distance;
-
-        const maxDistance = mouse.radius;
-        let force = (maxDistance - distance) / maxDistance;
-
-        // "Spider-sense" push effect
-        if (distance < mouse.radius) {
-          this.vx -= forceDirectionX * force * this.density * 0.6;
-          this.vy -= forceDirectionY * force * this.density * 0.6;
-        }
-
-        // Spring back to base position
-        this.vx += (this.baseX - this.x) * 0.05; // Spring stiffness
-        this.vy += (this.baseY - this.y) * 0.05;
-
-        // Damping (friction)
-        this.vx *= 0.8;
-        this.vy *= 0.8;
-
-        this.x += this.vx;
-        this.y += this.vy;
-      }
-
-      draw() {
-        ctx.fillStyle = "rgba(225, 6, 0, 0.4)";
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.closePath();
-        ctx.fill();
-      }
+  const particleCount = 3000;
+  const positions = useMemo(() => {
+    const data = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount; i++) {
+      const i3 = i * 3;
+      // Spread wide and deep
+      data[i3] = (Math.random() - 0.5) * 40;
+      data[i3 + 1] = (Math.random() - 0.5) * 40;
+      data[i3 + 2] = (Math.random() - 0.5) * 20 - 15; // Deep Z
     }
-
-    let nodes = [];
-    const initNodes = () => {
-      nodes = [];
-      const density = Math.floor((width * height) / 15000); // Responsive amount of nodes
-      for (let i = 0; i < density; i++) {
-        let x = Math.random() * width;
-        let y = Math.random() * height;
-        nodes.push(new Node(x, y));
-      }
-    };
-    initNodes();
-
-    let animId;
-    const connectNodes = () => {
-      for (let a = 0; a < nodes.length; a++) {
-        for (let b = a; b < nodes.length; b++) {
-          let dx = nodes[a].x - nodes[b].x;
-          let dy = nodes[a].y - nodes[b].y;
-          let distance = dx * dx + dy * dy;
-
-          if (distance < 15000) {
-            let opacity = 1 - distance / 15000;
-            ctx.strokeStyle = `rgba(225, 6, 0, ${opacity * 0.15})`;
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(nodes[a].x, nodes[a].y);
-            ctx.lineTo(nodes[b].x, nodes[b].y);
-            ctx.stroke();
-          }
-        }
-      }
-    };
-
-    const animate = () => {
-      ctx.fillStyle = "#0a0a0f"; // Must match var(--bg-color)
-      ctx.fillRect(0, 0, width, height);
-
-      for (let i = 0; i < nodes.length; i++) {
-        nodes[i].update();
-        nodes[i].draw();
-      }
-      connectNodes();
-      
-      animId = requestAnimationFrame(animate);
-    };
-    animate();
-
-    const handleResize = () => {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-      initNodes();
-    };
-
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      cancelAnimationFrame(animId);
-      window.removeEventListener("resize", handleResize);
-      window.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseleave", handleMouseLeave);
-    };
+    return data;
   }, []);
 
-  return <canvas ref={canvasRef} className="web-canvas" style={{ opacity: 0.8, background: '#0a0a0f' }} />;
+  useFrame((state) => {
+    if (!pointsRef.current) return;
+    const time = state.clock.elapsedTime;
+
+    // Very slow idle rotation
+    pointsRef.current.rotation.y = time * 0.005;
+    pointsRef.current.rotation.x = Math.sin(time * 0.05) * 0.01;
+  });
+
+  return (
+    <Points ref={pointsRef} positions={positions} stride={3} frustumCulled={false}>
+      <PointMaterial
+        transparent
+        color="#aaccff"
+        size={0.025}
+        sizeAttenuation
+        depthWrite={false}
+        opacity={0.7}
+        blending={THREE.AdditiveBlending}
+      />
+    </Points>
+  );
+}
+
+/* =====================================================
+   LAYER 2: MIDGROUND STARS (White & Red, Faster Parallax)
+===================================================== */
+function MidgroundStars() {
+  const whitePointsRef = useRef();
+  const redPointsRef = useRef();
+
+  const whiteCount = 1500;
+  const redCount = 300;
+
+  const whitePositions = useMemo(() => {
+    const data = new Float32Array(whiteCount * 3);
+    for (let i = 0; i < whiteCount; i++) {
+      const i3 = i * 3;
+      data[i3] = (Math.random() - 0.5) * 25;
+      data[i3 + 1] = (Math.random() - 0.5) * 20;
+      data[i3 + 2] = (Math.random() - 0.5) * 15 - 5; // Closer Z
+    }
+    return data;
+  }, []);
+
+  const redPositions = useMemo(() => {
+    const data = new Float32Array(redCount * 3);
+    for (let i = 0; i < redCount; i++) {
+      const i3 = i * 3;
+      data[i3] = (Math.random() - 0.5) * 20;
+      data[i3 + 1] = (Math.random() - 0.5) * 15;
+      data[i3 + 2] = (Math.random() - 0.5) * 15 - 5;
+    }
+    return data;
+  }, []);
+
+  useFrame((state) => {
+    if (!whitePointsRef.current || !redPointsRef.current) return;
+    const time = state.clock.elapsedTime;
+
+    // Noticeable movement, different direction/speed
+    whitePointsRef.current.rotation.y = time * 0.015;
+    whitePointsRef.current.rotation.z = Math.sin(time * 0.1) * 0.02;
+
+    redPointsRef.current.rotation.y = -time * 0.02;
+    redPointsRef.current.rotation.x = Math.cos(time * 0.08) * 0.02;
+  });
+
+  return (
+    <>
+      <Points ref={whitePointsRef} positions={whitePositions} stride={3} frustumCulled={false}>
+        <PointMaterial
+          transparent
+          color="#ffffff"
+          size={0.035}
+          sizeAttenuation
+          depthWrite={false}
+          opacity={0.9}
+          blending={THREE.AdditiveBlending}
+        />
+      </Points>
+      <Points ref={redPointsRef} positions={redPositions} stride={3} frustumCulled={false}>
+        <PointMaterial
+          transparent
+          color="#ff3333"
+          size={0.05}
+          sizeAttenuation
+          depthWrite={false}
+          opacity={0.8}
+          blending={THREE.AdditiveBlending}
+        />
+      </Points>
+    </>
+  );
+}
+
+/* =====================================================
+   LAYER 3: CENTRAL OBJECT & RINGS (Strongest Response)
+===================================================== */
+function CentralCore() {
+  const groupRef = useRef();
+  const { mouse } = useThree();
+
+  useFrame((state) => {
+    if (!groupRef.current) return;
+    const time = state.clock.elapsedTime;
+
+    // Idle rotation
+    const baseRotX = time * 0.1;
+    const baseRotY = time * 0.15;
+
+    // Cursor influence on tilt (rotate toward cursor)
+    // When mouse moves right (x > 0), we want it to tilt right
+    const targetTiltX = mouse.y * 0.4;
+    const targetTiltY = mouse.x * 0.6;
+
+    // Add tilt to base rotation using lerp conceptually
+    groupRef.current.rotation.x += (baseRotX + targetTiltX - groupRef.current.rotation.x) * 0.05;
+    groupRef.current.rotation.y += (baseRotY + targetTiltY - groupRef.current.rotation.y) * 0.05;
+    groupRef.current.rotation.z = time * 0.05;
+
+    // Cursor influence on position (move slightly with cursor)
+    // To make it move left when cursor is left, targetX = -mouse.x * something if camera moves right? 
+    // Wait, if camera moves RIGHT (targetCamX = -mouse.x * 1.5), 
+    // the whole scene appears to move LEFT. 
+    // If we want the central object to move slightly MORE left, we should move it left in world space.
+    // So targetPosX = mouse.x * positive_value.
+    const targetPosX = mouse.x * 0.5;
+    const targetPosY = mouse.y * 0.5;
+
+    groupRef.current.position.x += (targetPosX - groupRef.current.position.x) * 0.05;
+    groupRef.current.position.y += (targetPosY - groupRef.current.position.y) * 0.05;
+  });
+
+  return (
+    <Float speed={1} rotationIntensity={0.2} floatIntensity={0.5}>
+      <group ref={groupRef} position={[0, 0, -2]}>
+        {/* Outer Gray Wireframe */}
+        <mesh>
+          <icosahedronGeometry args={[2.2, 1]} />
+          <meshBasicMaterial color="#aaaaaa" wireframe transparent opacity={0.08} depthWrite={false} />
+        </mesh>
+
+        {/* Inner Red Wireframe */}
+        <mesh scale={0.75}>
+          <icosahedronGeometry args={[2.2, 1]} />
+          <meshBasicMaterial color="#e10600" wireframe transparent opacity={0.15} depthWrite={false} />
+        </mesh>
+
+        {/* Core Solid Glow */}
+        <mesh scale={0.2}>
+          <sphereGeometry args={[2.2, 32, 32]} />
+          <meshBasicMaterial color="#ffffff" transparent opacity={0.9} depthWrite={false} />
+        </mesh>
+      </group>
+    </Float>
+  );
+}
+
+function OrbitingRings() {
+  const groupRef = useRef();
+  const { mouse } = useThree();
+
+  useFrame((state) => {
+    if (!groupRef.current) return;
+    const time = state.clock.elapsedTime;
+
+    // Idle continuous rotation
+    const baseRotY = time * 0.08;
+    const baseRotZ = Math.sin(time * 0.1) * 0.1;
+
+    // Cursor influence on rings
+    const targetTiltX = mouse.y * 0.5;
+    const targetTiltY = mouse.x * 0.7;
+
+    // Smooth easing
+    groupRef.current.rotation.x += (targetTiltX - groupRef.current.rotation.x) * 0.04;
+    groupRef.current.rotation.y += (baseRotY + targetTiltY - groupRef.current.rotation.y) * 0.04;
+    groupRef.current.rotation.z += (baseRotZ - groupRef.current.rotation.z) * 0.04;
+
+    // Rings shift slightly differently from the core
+    const targetPosX = mouse.x * 0.3;
+    const targetPosY = mouse.y * 0.3;
+
+    groupRef.current.position.x += (targetPosX - groupRef.current.position.x) * 0.04;
+    groupRef.current.position.y += (targetPosY - groupRef.current.position.y) * 0.04;
+  });
+
+  return (
+    <group ref={groupRef} position={[0, 0, -2]}>
+      {/* White Inner Ring */}
+      <mesh rotation={[Math.PI / 2.5, 0, 0]}>
+        <torusGeometry args={[2.6, 0.008, 16, 100]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.15} depthWrite={false} />
+      </mesh>
+
+      {/* Red Mid Ring */}
+      <mesh rotation={[Math.PI / 3, 0.4, 0]}>
+        <torusGeometry args={[3.0, 0.01, 16, 100]} />
+        <meshBasicMaterial color="#e10600" transparent opacity={0.2} depthWrite={false} />
+      </mesh>
+
+      {/* Subtle Outer Ring */}
+      <mesh rotation={[0.6, Math.PI / 4, 0]}>
+        <torusGeometry args={[3.5, 0.005, 16, 100]} />
+        <meshBasicMaterial color="#aaaaaa" transparent opacity={0.1} depthWrite={false} />
+      </mesh>
+    </group>
+  );
+}
+
+/* =====================================================
+   INTERACTIVE CAMERA (Parallax Controller)
+===================================================== */
+function CameraController() {
+  const { camera, mouse } = useThree();
+
+  useFrame(() => {
+    // Parallax logic: 
+    // To make the background shift left when the cursor moves left, 
+    // the camera must move right. 
+    // mouse.x is -1 on the left. So target camera X should be positive.
+    const targetCamX = -mouse.x * 1.5;
+    const targetCamY = -mouse.y * 1.5;
+
+    camera.position.x += (targetCamX - camera.position.x) * 0.03;
+    camera.position.y += (targetCamY - camera.position.y) * 0.03;
+
+    // Slight depth response based on distance from center
+    const dist = Math.sqrt(mouse.x * mouse.x + mouse.y * mouse.y);
+    const targetCamZ = 6 + dist * 1.0;
+
+    camera.position.z += (targetCamZ - camera.position.z) * 0.03;
+
+    // Always look at the center of the scene
+    camera.lookAt(0, 0, -2);
+  });
+
+  return null;
+}
+
+/* =====================================================
+   MAIN COMPONENT
+===================================================== */
+export default function WebBackground() {
+  return (
+    <div className="web-background">
+      <Canvas
+        eventSource={document.getElementById('root')}
+        eventPrefix="client"
+        camera={{
+          position: [0, 0, 6],
+          fov: 60,
+          near: 0.1,
+          far: 100,
+        }}
+        dpr={[1, 1.5]} // Limit pixel ratio for performance
+        gl={{
+          antialias: true,
+          alpha: true,
+          powerPreference: "high-performance",
+        }}
+      >
+        {/* Deep black/dark background */}
+        <color attach="background" args={["#030305"]} />
+
+        <CameraController />
+        <BackgroundStars />
+        <MidgroundStars />
+        <CentralCore />
+        <OrbitingRings />
+      </Canvas>
+    </div>
+  );
 }
