@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+
 import {
   FaJava,
   FaReact,
@@ -11,31 +12,43 @@ import {
   FaHtml5,
   FaCss3Alt,
   FaJs,
-  FaDatabase
+  FaDatabase,
 } from "react-icons/fa";
 
-import { SiC, SiMysql, SiExpress, SiFlask, SiPostgresql } from "react-icons/si";
+import {
+  SiC,
+  SiMysql,
+  SiExpress,
+  SiFlask,
+  SiPostgresql,
+} from "react-icons/si";
 
 const categories = [
   {
-    title: "Languages",
+    id: "01",
+    title: "LANGUAGES",
+    description: "Core programming & problem solving",
     items: [
       { icon: <FaJava />, name: "Java" },
       { icon: <SiC />, name: "C" },
       { icon: <FaPython />, name: "Python" },
       { icon: <FaJs />, name: "JavaScript" },
-    ]
+    ],
   },
   {
-    title: "Frontend",
+    id: "02",
+    title: "FRONTEND",
+    description: "Interfaces & interactive experiences",
     items: [
       { icon: <FaHtml5 />, name: "HTML5" },
       { icon: <FaCss3Alt />, name: "CSS3" },
       { icon: <FaReact />, name: "React" },
-    ]
+    ],
   },
   {
-    title: "Backend & Database",
+    id: "03",
+    title: "BACKEND & DATABASE",
+    description: "APIs, services & data systems",
     items: [
       { icon: <FaNodeJs />, name: "Node.js" },
       { icon: <SiExpress />, name: "Express" },
@@ -43,147 +56,197 @@ const categories = [
       { icon: <SiMysql />, name: "MySQL" },
       { icon: <SiPostgresql />, name: "PostgreSQL" },
       { icon: <FaDatabase />, name: "MongoDB" },
-    ]
+    ],
   },
   {
-    title: "Tools & DevOps",
+    id: "04",
+    title: "TOOLS & DEVOPS",
+    description: "Development workflow & deployment",
     items: [
       { icon: <FaGitAlt />, name: "Git" },
       { icon: <FaGithub />, name: "GitHub" },
       { icon: <FaDocker />, name: "Docker" },
-    ]
-  }
+    ],
+  },
 ];
 
-// Interactive 3D Tilt + Spotlight Skill Component
-const SkillCard = ({ item }) => {
-  const cardRef = useRef(null);
+const SkillItem = ({ item, index }) => {
+  const ref = useRef(null);
 
-  // Spotlight mouse tracking
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
-  // 3D Tilt physics
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
+  const rotateX = useSpring(
+    useTransform(mouseY, [-0.5, 0.5], [4, -4]),
+    { stiffness: 300, damping: 25 }
+  );
 
-  const mouseXSpring = useSpring(x, { stiffness: 400, damping: 25 });
-  const mouseYSpring = useSpring(y, { stiffness: 400, damping: 25 });
+  const rotateY = useSpring(
+    useTransform(mouseX, [-0.5, 0.5], [-4, 4]),
+    { stiffness: 300, damping: 25 }
+  );
 
-  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ["15deg", "-15deg"]);
-  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ["-15deg", "15deg"]);
+  const handleMouseMove = (e) => {
+    if (!ref.current) return;
 
-  const cardVariants = {
-    hidden: { opacity: 0, y: 30, scale: 0.9 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: { duration: 0.5, ease: "easeOut" }
-    }
+    const rect = ref.current.getBoundingClientRect();
+
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+
+    mouseX.set(x);
+    mouseY.set(y);
   };
 
-  function handleMouseMove(e) {
-    if (!cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-
-    // Set Spotlight CSS variables
-    const spotX = e.clientX - rect.left;
-    const spotY = e.clientY - rect.top;
-    mouseX.set(spotX);
-    mouseY.set(spotY);
-    cardRef.current.style.setProperty("--mouse-x", `${spotX}px`);
-    cardRef.current.style.setProperty("--mouse-x", `${spotY}px`);
-
-    // Calculate 3D Tilt percentage (-0.5 to 0.5)
-    const tiltX = spotX / rect.width - 0.5;
-    const tiltY = spotY / rect.height - 0.5;
-    x.set(tiltX);
-    y.set(tiltY);
-  }
-
-  function handleMouseLeave() {
-    x.set(0);
-    y.set(0);
-  }
+  const handleMouseLeave = () => {
+    mouseX.set(0);
+    mouseY.set(0);
+  };
 
   return (
     <motion.div
-      ref={cardRef}
-      className="tech-card spotlight-card"
-      variants={cardVariants}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
+      ref={ref}
+      className="skill-item"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{
+        duration: 0.45,
+        delay: index * 0.05,
+        ease: "easeOut",
+      }}
       style={{
         rotateX,
         rotateY,
-        transformStyle: "preserve-3d"
+        transformPerspective: 800,
       }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
     >
-      <motion.div
-        className="spotlight-overlay"
-        style={{
-          background: useTransform(
-            [mouseX, mouseY],
-            ([x, y]) => `radial-gradient(150px circle at ${x}px ${y}px, rgba(225, 6, 0, 0.25), transparent 40%)`
-          )
-        }}
-      />
-
-      {/* Content moved forward in Z space for 3D POP */}
-      <div style={{ transform: "translateZ(30px)", display: "flex", flexDirection: "column", alignItems: "center", pointerEvents: "none" }}>
+      <div className="skill-icon">
         {item.icon}
-        <span>{item.name}</span>
       </div>
+
+      <span>{item.name}</span>
+
+      <div className="skill-arrow">↗</div>
     </motion.div>
   );
 };
 
 export default function TechArsenal() {
-  const containerVariants = {
-    hidden: {},
-    visible: {
-      transition: { staggerChildren: 0.08 }
-    }
-  };
-
-  const fadeUp = {
-    hidden: { opacity: 0, y: 40 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6, ease: "easeOut" }
-    }
-  };
-
   return (
-    <section className="tech-arsenal" id="tech" style={{ perspective: "1500px" }}>
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.2 }}
-      >
-        <motion.h2 className="section-title" variants={fadeUp}>
-          Skills & <span>Technologies</span>
-        </motion.h2>
-        <motion.p className="section-subtitle" variants={fadeUp}>
-          Technologies I work with daily
-        </motion.p>
+    <section className="tech-arsenal" id="tech">
+      <div className="skills-container">
 
-        <div className="skills-categories">
-          {categories.map((category, catIndex) => (
-            <motion.div key={catIndex} className="skill-category" variants={fadeUp}>
-              <h3>{category.title}</h3>
-              <motion.div className="tech-container" variants={containerVariants}>
+        {/* HEADER */}
+        <motion.div
+          className="skills-header"
+          initial={{ opacity: 0, y: 25 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="skills-index">
+            <span>03</span>
+            <i></i>
+            <span>TECH STACK</span>
+          </div>
+          
+        </motion.div>
+
+        {/* TITLE */}
+        <motion.div
+          className="skills-heading"
+          initial={{ opacity: 0, y: 35 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
+        >
+          <div>
+            <p>TOOLS OF THE TRADE</p>
+
+            <h2>
+              Skills & <span>Technologies</span>
+            </h2>
+          </div>
+
+          <p className="skills-heading-description">
+            A practical stack built around software engineering,
+            full-stack development, scalable systems and continuous learning.
+          </p>
+        </motion.div>
+
+        {/* CATEGORY GRID */}
+        <div className="skills-grid">
+          {categories.map((category, categoryIndex) => (
+            <motion.div
+              key={category.id}
+              className={`skill-group skill-group-${categoryIndex + 1}`}
+              initial={{ opacity: 0, y: 35 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{
+                duration: 0.6,
+                delay: categoryIndex * 0.08,
+              }}
+            >
+              {/* CATEGORY HEADER */}
+              <div className="skill-group-header">
+                <div className="skill-group-number">
+                  {category.id}
+                </div>
+
+                <div>
+                  <h3>{category.title}</h3>
+                  <p>{category.description}</p>
+                </div>
+              </div>
+
+              {/* SKILLS */}
+              <div className="skill-items">
                 {category.items.map((item, index) => (
-                  <SkillCard key={index} item={item} />
+                  <SkillItem
+                    key={item.name}
+                    item={item}
+                    index={index}
+                  />
                 ))}
-              </motion.div>
+              </div>
             </motion.div>
           ))}
         </div>
-      </motion.div>
+
+        {/* BOTTOM SYSTEM BAR */}
+        <motion.div
+          className="skills-footer"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
+        >
+          <div>
+            <span className="footer-label">STACK STATUS</span>
+            <span className="footer-value">ACTIVE</span>
+          </div>
+
+          <div>
+            <span className="footer-label">PRIMARY MODE</span>
+            <span className="footer-value">FULL STACK</span>
+          </div>
+
+          <div>
+            <span className="footer-label">CURRENTLY EXPANDING</span>
+            <span className="footer-value">AI / CLOUD / DEVOPS</span>
+          </div>
+
+          <div className="skills-signal">
+            <span></span>
+            CONTINUOUSLY LEARNING
+          </div>
+        </motion.div>
+
+      </div>
     </section>
   );
 }

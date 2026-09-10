@@ -1,26 +1,63 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
+const GITHUB_USERNAME = "papneetswain4-alt";
+
 export default function About() {
+  const [githubProjects, setGithubProjects] = useState(null);
+  const [githubLoading, setGithubLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchGithubStats = async () => {
+      try {
+        const response = await fetch(
+          `https://api.github.com/users/${GITHUB_USERNAME}/repos?per_page=100`
+        );
+
+        if (!response.ok) {
+          throw new Error("GitHub request failed");
+        }
+
+        const repos = await response.json();
+
+        // Ignore forks so the number represents projects
+        // actually created by the user.
+        const ownProjects = repos.filter((repo) => !repo.fork);
+
+        setGithubProjects(ownProjects.length);
+      } catch (error) {
+        console.error("GitHub stats error:", error);
+        setGithubProjects(null);
+      } finally {
+        setGithubLoading(false);
+      }
+    };
+
+    fetchGithubStats();
+  }, []);
+
   const containerVariants = {
     hidden: {},
     visible: {
-      transition: { staggerChildren: 0.15 }
-    }
+      transition: {
+        staggerChildren: 0.12,
+      },
+    },
   };
 
   const fadeUp = {
-    hidden: { opacity: 0, y: 50 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: "easeOut" } }
-  };
-
-  const slideLeft = {
-    hidden: { opacity: 0, x: -60 },
-    visible: { opacity: 1, x: 0, transition: { duration: 0.7, ease: "easeOut" } }
-  };
-
-  const slideRight = {
-    hidden: { opacity: 0, x: 60 },
-    visible: { opacity: 1, x: 0, transition: { duration: 0.7, ease: "easeOut" } }
+    hidden: {
+      opacity: 0,
+      y: 30,
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.65,
+        ease: "easeOut",
+      },
+    },
   };
 
   return (
@@ -30,98 +67,174 @@ export default function About() {
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true, amount: 0.2 }}
+        viewport={{ once: true, amount: 0.15 }}
       >
-        <motion.h2 className="section-title" variants={fadeUp}>
-          About <span>Me</span>
-        </motion.h2>
-        <motion.p className="section-subtitle" variants={fadeUp}>
-          A snapshot of who I am and what drives me
-        </motion.p>
+        {/* SECTION HEADER */}
+        <motion.div className="about-header" variants={fadeUp}>
+          <div className="about-index">
+            <span>01</span>
+            <i></i>
+            <span>ABOUT</span>
+          </div>
+        </motion.div>
 
-        <div className="about-grid">
-          {/* LEFT SIDE */}
-          <motion.div className="about-left" variants={slideLeft}>
-            <h3>
-              Building <span>scalable systems</span> with logic, structure and purpose.
-            </h3>
+        {/* MAIN INTRO */}
+        <div className="about-main">
+          <motion.div className="about-intro" variants={fadeUp}>
+            <p className="about-kicker">BUILDING WITH PURPOSE</p>
 
-            <p>
+            <h2>
+              Building <span>scalable systems</span>
+              <br />
+              with logic, structure & purpose.
+            </h2>
+
+            <p className="about-description">
               I'm a Computer Science student with strong foundations in
-              programming and analytical thinking. I focus on building practical
-              solutions that are clean, efficient, and performance-oriented.
-              From full-stack web applications to AI-powered microservices,
-              I enjoy turning complex problems into elegant solutions.
+              programming and analytical thinking. I focus on building
+              practical solutions that are clean, efficient, and
+              performance-oriented.
             </p>
 
-            <div className="focus-tags">
-              <span>Full Stack Development</span>
-              <span>Artificial Intelligence</span>
-              <span>Cloud & DevOps</span>
+            <p className="about-description">
+              From full-stack web applications to AI-powered microservices,
+              I enjoy turning complex problems into elegant, maintainable
+              solutions.
+            </p>
+
+            {/* FOCUS */}
+            <div className="about-focus">
+              <div className="focus-label">CURRENT FOCUS</div>
+
+              <div className="focus-list">
+                <span>FULL STACK DEVELOPMENT</span>
+                <span>ARTIFICIAL INTELLIGENCE</span>
+                <span>CLOUD & DEVOPS</span>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* LIVE SIGNALS */}
+          <motion.div className="about-signals" variants={fadeUp}>
+            <div className="signals-header">
+              <div>
+                <span className="signals-eyebrow">LIVE SIGNALS</span>
+                <h3>Development Activity</h3>
+              </div>
+
+              <span className="live-indicator">
+                <i></i>
+                LIVE
+              </span>
             </div>
 
-            <motion.div className="about-stats" variants={fadeUp}>
-              <div className="stat-box">
-                <h4>8+</h4>
+            <div className="signals-grid">
+              {/* GITHUB */}
+              <div className="signal">
+                <div className="signal-top">
+                  <span className="signal-number">
+                    {githubLoading
+                      ? "..."
+                      : githubProjects !== null
+                      ? `${githubProjects}+`
+                      : "--"}
+                  </span>
+
+                  <span className="signal-source">GITHUB</span>
+                </div>
+
                 <p>Projects Built</p>
+
+                <div className="signal-line">
+                  <span></span>
+                </div>
               </div>
-              <div className="stat-box">
-                <h4>300+</h4>
-                <p>DSA Problems</p>
+
+              {/* LEETCODE */}
+              <div className="signal">
+                <div className="signal-top">
+                  <span className="signal-number">300+</span>
+                  <span className="signal-source">LEETCODE</span>
+                </div>
+
+                <p>Problems Solved</p>
+
+                <div className="signal-line">
+                  <span></span>
+                </div>
               </div>
-              <div className="stat-box">
-                <h4>1200+</h4>
+
+              {/* WAKATIME */}
+              <div className="signal">
+                <div className="signal-top">
+                  <span className="signal-number">1200+</span>
+                  <span className="signal-source">WAKATIME</span>
+                </div>
+
                 <p>Coding Hours</p>
+
+                <div className="signal-line">
+                  <span></span>
+                </div>
               </div>
-            </motion.div>
+            </div>
 
-            <motion.div className="learning-journey" variants={fadeUp}>
-              <h4>🚀 Current Learning Journey</h4>
-              <ul>
-                <li>📊 Data Structures & Algorithms</li>
-                <li>☕ Advanced Java Concepts</li>
-                <li>🌐 Frontend + Backend Integration</li>
-                <li>🗄️ Database & API Handling</li>
-                <li>🐳 Containerization & Deployment</li>
-              </ul>
-            </motion.div>
-          </motion.div>
-
-          {/* RIGHT SIDE */}
-          <motion.div className="about-right" variants={slideRight}>
-            <motion.div className="about-card" variants={fadeUp}>
-              <h3>CORE TECHNOLOGIES</h3>
-              <ul>
-                <li>Java & Python</li>
-                <li>React & JavaScript</li>
-                <li>Node.js & Express</li>
-                <li>PostgreSQL & MySQL</li>
-                <li>Docker & Git</li>
-              </ul>
-            </motion.div>
-
-            <motion.div className="about-card" variants={fadeUp}>
-              <h3>ENGINEERING APPROACH</h3>
-              <ul>
-                <li>Data Structures & Algorithms</li>
-                <li>Modular & Structured Code</li>
-                <li>Scalable Architecture</li>
-                <li>Performance Optimization</li>
-                <li>CI/CD & Cloud Deployment</li>
-              </ul>
-            </motion.div>
-
-            <motion.div className="about-card" variants={fadeUp}>
-              <h3>PROFESSIONAL MINDSET</h3>
-              <ul>
-                <li>Strong Logical Reasoning</li>
-                <li>Adaptability & Quick Learning</li>
-                <li>Collaborative Problem Solving</li>
-                <li>Growth-Oriented Thinking</li>
-              </ul>
-            </motion.div>
+            <div className="signals-footer">
+              <span>DATA SOURCES</span>
+              <span>GITHUB / LEETCODE / WAKATIME</span>
+            </div>
           </motion.div>
         </div>
+
+        {/* ENGINEERING PROFILE */}
+        <motion.div className="engineering-profile" variants={fadeUp}>
+          <div className="profile-heading">
+            <span>02</span>
+            <i></i>
+            <h3>ENGINEERING PROFILE</h3>
+          </div>
+
+          <div className="profile-grid">
+            {/* TECHNOLOGIES */}
+            <div className="profile-column">
+              <span className="profile-label">CORE TECHNOLOGIES</span>
+
+              <div className="profile-items">
+                <span>Java & Python</span>
+                <span>React & JavaScript</span>
+                <span>Node.js & Express</span>
+                <span>PostgreSQL & MySQL</span>
+                <span>Docker & Git</span>
+              </div>
+            </div>
+
+            {/* APPROACH */}
+            <div className="profile-column">
+              <span className="profile-label">ENGINEERING APPROACH</span>
+
+              <div className="profile-items">
+                <span>Data Structures & Algorithms</span>
+                <span>Modular Architecture</span>
+                <span>Performance Optimization</span>
+                <span>Scalable Systems</span>
+                <span>CI/CD & Cloud Deployment</span>
+              </div>
+            </div>
+
+            {/* MINDSET */}
+            <div className="profile-column">
+              <span className="profile-label">PROFESSIONAL MINDSET</span>
+
+              <div className="profile-items">
+                <span>Logical Problem Solving</span>
+                <span>Adaptability</span>
+                <span>Collaborative Development</span>
+                <span>Continuous Learning</span>
+                <span>Growth-Oriented Thinking</span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </motion.div>
     </section>
   );
