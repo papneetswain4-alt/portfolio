@@ -138,68 +138,117 @@ section:last-of-type {
 /* =========================
    CUSTOM CURSOR
 ========================= */
+ /* =========================================
+    SMALL CURSOR DOT
+ ========================================= */
+
 .custom-cursor {
   position: fixed;
+
   top: 0;
   left: 0;
-  width: 6px;
-  height: 6px;
-  background: #ffffff;
+
+  width: 7px;
+  height: 7px;
+
   border-radius: 50%;
+
+  background: #818181;
+
   pointer-events: none;
-  transform: translate(-50%, -50%);
-  z-index: 9999;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
-  transition: width var(--transition-fast), height var(--transition-fast), background var(--transition-fast);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+
+  z-index: 100001;
+
+  will-change: transform;
+
+  transition:
+    background-color 0.15s ease,
+    width 0.25s ease,
+    height 0.25s ease;
 }
 
-.custom-cursor span {
-  position: absolute;
-  font-family: var(--font-display);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  color: #fff;
-  opacity: 0;
-  transition: opacity var(--transition-fast);
-  pointer-events: none;
-}
+
+/* =========================================
+   LARGE GLASS RING
+========================================= */
 
 .cursor-outline {
   position: fixed;
+
   top: 0;
   left: 0;
+
   width: 28px;
   height: 28px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
+
   border-radius: 50%;
+
+  border: 1.5px solid
+    rgba(255, 255, 255, 0.9);
+
+  background:
+    rgba(255, 255, 255, 0.025);
+
+  backdrop-filter:
+    invert(100%)
+    blur(1px);
+
+  -webkit-backdrop-filter:
+    invert(100%)
+    blur(1px);
+
   pointer-events: none;
-  transform: translate(-50%, -50%);
-  z-index: 9998;
-  transition: width var(--transition), height var(--transition), border-color var(--transition), background var(--transition);
+
+  z-index: 100000;
+
+  will-change: transform;
+
+  box-shadow:
+    0 0 14px
+    rgba(255, 255, 255, 0.05);
 }
 
-/* Hover States */
+
+/* =========================================
+   HOVER
+========================================= */
+
 .custom-cursor.cursor-hover {
-  width: 50px;
-  height: 50px;
-  background: rgba(225, 6, 0, 0.9);
-  box-shadow: 0 0 20px rgba(225, 6, 0, 0.4);
+  width: 7px;
+  height: 7px;
 }
 
-.custom-cursor.cursor-hover span {
-  opacity: 1;
+.cursor-outline.cursor-hover {
+  width: 38px;
+  height: 38px;
 }
 
-.custom-cursor.cursor-hover+.cursor-outline {
-  width: 65px;
-  height: 65px;
-  border-color: rgba(225, 6, 0, 0.4);
+
+/* =========================================
+   HIDE TEXT
+========================================= */
+
+.custom-cursor span {
+  display: none;
 }
 
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 768px) {
+
+  .custom-cursor,
+  .cursor-outline {
+    display: none;
+  }
+
+  body {
+    cursor: auto;
+  }
+
+}
 /* =========================
    NAVIGATION
 ========================= */
