@@ -1,268 +1,143 @@
-import { motion } from "framer-motion";
-import {
-  FaGithub,
-  FaExternalLinkAlt,
-  FaArrowRight,
-} from "react-icons/fa";
+import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { FaArrowUpRightFromSquare, FaGithub, FaXmark } from "react-icons/fa6";
+import { projects } from "../data/projects";
+import { useScrollReveal } from "../hooks/useScrollReveal";
+import { useScrollParallax } from "../hooks/useScrollParallax";
+import { startLenis, stopLenis } from "../lib/lenisController";
 
-const projects = [
-  {
-    number: "01",
-    featured: true,
-    title: "TITLE VERIFICATION SYSTEM",
-    category: "ARTIFICIAL INTELLIGENCE / NLP",
-    description:
-      "An AI-powered title verification system that validates publication titles using phonetic matching, semantic similarity, NLP algorithms, and automated probability scoring.",
-    technologies: [
-      "React",
-      "Node.js",
-      "Express",
-      "Python",
-      "NLP",
-      "PostgreSQL",
-      "Docker",
-    ],
-    status: "COMPLETED",
-    github: "https://github.com/papneetswain4-alt/title-verification-system",
-    demo: "https://title-verification-system.netlify.app/",
-  },
+function ProjectPreview({ project, modal = false }) {
+  const previewRef = useRef(null);
+  const hasImage = Boolean(project.image || project.thumbnail);
+  const image = project.image || project.thumbnail;
 
-  {
-    number: "02",
-    featured: true,
-    title: "FOODIFY",
-    category: "FULL STACK WEB APPLICATION",
-    description:
-      "A full-stack online food ordering system where customers can browse restaurant menus, authenticate with Google, add items to their cart, place orders, and track their activity, with an admin dashboard for restaurant management.",
-    technologies: [
-      "HTML",
-      "CSS",
-      "JavaScript",
-      "Node.js",
-      "Express",
-      "MongoDB",
-      "Netlify",
-      "Render",
-    ],
-    status: "COMPLETED",
-    github: "https://github.com/papneetswain4-alt/restaurant-ordering-system",
-    demo: "https://foodily-orders.netlify.app/",
-  },
+  const handlePointerMove = (event) => {
+    if (!previewRef.current || !hasImage) return;
+    const rect = previewRef.current.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width - 0.5) * 8;
+    const y = ((event.clientY - rect.top) / rect.height - 0.5) * 5;
+    previewRef.current.style.setProperty("--preview-x", `${x}px`);
+    previewRef.current.style.setProperty("--preview-y", `${y}px`);
+  };
 
-  {
-    number: "03",
-    featured: false,
-    title: "DEV TRACKER",
-    category: "FULL STACK / DEVELOPER PRODUCTIVITY",
-    description:
-      "A developer productivity platform for tracking daily coding hours, problems solved, development streaks, goals, and GitHub-style contribution activity with authentication and analytics.",
-    technologies: [
-      "React",
-      "Node.js",
-      "Express",
-      "MongoDB",
-      "JWT",
-      "Recharts",
-      "Netlify",
-      "Render",
-    ],
-    status: "COMPLETED",
-    github: "https://github.com/papneetswain4-alt/Dev-tracker",
-    demo: "https://dev-tracker-mern.netlify.app/",
-  },
+  const resetPointer = () => {
+    previewRef.current?.style.setProperty("--preview-x", "0px");
+    previewRef.current?.style.setProperty("--preview-y", "0px");
+  };
 
-  {
-    number: "04",
-    featured: false,
-    title: "ALUMNI PORTAL",
-    category: "DJANGO / UNIVERSITY MANAGEMENT",
-    description:
-      "A Django-based university alumni portal designed to connect alumni and students through authentication, alumni profiles, news, events, galleries, and centralized alumni management.",
-    technologies: [
-      "Python",
-      "Django",
-      "MySQL",
-      "HTML",
-      "CSS",
-      "JavaScript",
-    ],
-    status: "IN DEVELOPMENT",
-    github: "https://github.com/papneetswain4-alt/alumni-portal",
-    demo: "#",
-  },
+  return (
+    <div
+      className={`project-preview ${hasImage ? "has-image" : "is-placeholder"} ${modal ? "project-preview-modal" : ""}`}
+      ref={previewRef}
+      onPointerMove={handlePointerMove}
+      onPointerLeave={resetPointer}
+    >
+      {hasImage ? (
+        <img src={image} alt={`${project.title} project preview`} loading="lazy" />
+      ) : (
+        <>
+          <span className="preview-placeholder-label">PROJECT PREVIEW</span>
+          <strong>{project.number}</strong>
+          <small>{project.category}</small>
+        </>
+      )}
+    </div>
+  );
+}
 
-  {
-    number: "05",
-    featured: false,
-    title: "PERSONAL PORTFOLIO",
-    category: "FRONTEND / PERSONAL BRAND",
-    description:
-      "A modern responsive developer portfolio built to showcase projects, technical skills, development experience, and achievements with smooth animations and a GitHub-powered project section.",
-    technologies: [
-      "React",
-      "Vite",
-      "JavaScript",
-      "HTML5",
-      "CSS3",
-      "Framer Motion",
-    ],
-    status: "COMPLETED",
-    github: "https://github.com/papneetswain4-alt/portfolio",
-    demo: "https://spidey-portfolio.netlify.app/",
-  },
-];
-function ProjectCard({ project, index }) {
+function ProjectCard({ project, onOpen }) {
+  const handleEnter = () => window.dispatchEvent(new CustomEvent("galaxy-project-hover", { detail: { active: true } }));
+  const handleLeave = () => window.dispatchEvent(new CustomEvent("galaxy-project-hover", { detail: { active: false } }));
+
   return (
     <motion.article
-      className={`project-item ${
-        project.featured ? "project-featured" : ""
-      }`}
-      initial={{ opacity: 0, y: 35 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.15 }}
-      transition={{
-        duration: 0.6,
-        delay: index * 0.08,
-        ease: "easeOut",
-      }}
+      className={`project-card cursor-can-hover ${project.featured ? "is-featured" : ""}`}
+      data-reveal-item
+      onClick={() => onOpen(project)}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+      onFocus={handleEnter}
+      onBlur={handleLeave}
+      tabIndex="0"
+      onKeyDown={(event) => event.key === "Enter" && onOpen(project)}
+      aria-label={`Open details for ${project.title}`}
     >
-      {/* NUMBER */}
-      <div className="project-number">
-        {project.number}
-      </div>
-
-      {/* MAIN CONTENT */}
-      <div className="project-main">
-        <div className="project-meta">
-          <span>{project.category}</span>
-
-          <span className="project-status">
-            <i></i>
-            {project.status}
-          </span>
-        </div>
-
+      <ProjectPreview project={project} />
+      <div className="project-card-body">
+        <div className="project-card-top"><span>{project.number} / {project.category}</span><i>{project.status}</i></div>
         <h3>{project.title}</h3>
-
         <p>{project.description}</p>
-
-        <div className="project-tech">
-          {project.technologies.map((technology) => (
-            <span key={technology}>{technology}</span>
-          ))}
-        </div>
-      </div>
-
-      {/* ACTIONS */}
-      <div className="project-actions">
-        <a
-          href={project.github}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={`View ${project.title} on GitHub`}
-        >
-          <FaGithub />
-          <span>CODE</span>
-        </a>
-
-        <a
-          href={project.demo}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={`View live demo of ${project.title}`}
-        >
-          <FaExternalLinkAlt />
-          <span>LIVE</span>
-        </a>
-
-        <div className="project-arrow">
-          <FaArrowRight />
+        <div className="project-card-bottom">
+          <div>{project.technologies.slice(0, 4).map((technology) => <span key={technology}>{technology}</span>)}</div>
+          <span className="project-open">VIEW <b>↗</b></span>
         </div>
       </div>
     </motion.article>
   );
 }
 
-export default function Projects() {
+function ProjectModal({ project, onClose }) {
+  useEffect(() => {
+    const handleKey = (event) => event.key === "Escape" && onClose();
+    document.addEventListener("keydown", handleKey);
+    document.body.classList.add("modal-open");
+    stopLenis();
+    return () => {
+      document.removeEventListener("keydown", handleKey);
+      document.body.classList.remove("modal-open");
+      startLenis();
+    };
+  }, [onClose]);
+
   return (
-    <section className="projects" id="projects">
-      <div className="projects-container">
-
-        {/* HEADER */}
-        <motion.div
-          className="projects-header"
-          initial={{ opacity: 0, y: 25 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          <div className="projects-index">
-            <span>04</span>
-            <i></i>
-            <span>SELECTED WORK</span>
+    <motion.div className="project-modal-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={onClose}>
+      <motion.div className="project-modal" data-lenis-prevent role="dialog" aria-modal="true" aria-labelledby="project-modal-title" initial={{ y: 28, opacity: 0, scale: 0.98 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: 28, opacity: 0, scale: 0.98 }} transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }} onMouseDown={(event) => event.stopPropagation()}>
+        <button className="modal-close cursor-can-hover" onClick={onClose} aria-label="Close project details"><FaXmark /></button>
+        <ProjectPreview project={project} modal />
+        {project.images?.length > 0 && (
+          <div className="project-gallery" aria-label="Additional project screenshots">
+            {project.images.map((image, index) => (
+              <img key={image} src={image} alt={`${project.title} screenshot ${index + 1}`} loading="lazy" />
+            ))}
           </div>
-
-        </motion.div>
-
-        {/* TITLE */}
-        <motion.div
-          className="projects-heading"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7 }}
-        >
-          <div>
-            <p>WHAT I'VE BUILT</p>
-
-            <h2>
-              Selected <span>Projects</span>
-            </h2>
+        )}
+        <div className="modal-copy">
+          <span className="eyebrow">{project.number} / {project.category}</span>
+          <h2 id="project-modal-title">{project.title}</h2>
+          <p>{project.description}</p>
+          <div className="modal-columns">
+            <div><span className="eyebrow">TECHNOLOGIES</span><div className="modal-tags">{project.technologies.map((technology) => <span key={technology}>{technology}</span>)}</div></div>
+            <div><span className="eyebrow">FEATURES</span><ul>{(project.features || []).map((feature) => <li key={feature}>{feature}</li>)}</ul></div>
           </div>
-
-          <p>
-            A collection of projects that represent how I approach
-            engineering problems — from idea and architecture to
-            implementation and deployment.
-          </p>
-        </motion.div>
-
-        {/* PROJECT LIST */}
-        <div className="projects-list">
-          {projects.map((project, index) => (
-            <ProjectCard
-              key={project.number}
-              project={project}
-              index={index}
-            />
-          ))}
+          <div className="modal-actions">
+            <a className="cursor-can-hover" href={project.github} target="_blank" rel="noreferrer"><FaGithub /> GITHUB</a>
+            {project.demo !== "#" && <a className="cursor-can-hover" href={project.demo} target="_blank" rel="noreferrer"><FaArrowUpRightFromSquare /> LIVE DEMO</a>}
+          </div>
         </div>
+      </motion.div>
+    </motion.div>
+  );
+}
 
-        {/* FOOTER */}
-        <motion.div
-          className="projects-footer"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          <span>
-            <b>{projects.length}</b> SELECTED PROJECTS
-          </span>
-
-          <span>
-            MORE PROJECTS AVAILABLE ON{" "}
-            <a
-              href="https://github.com/papneetswain4-alt"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              GITHUB ↗
-            </a>
-          </span>
-        </motion.div>
-
+export default function Projects() {
+  const [selectedProject, setSelectedProject] = useState(null);
+  const sectionRef = useScrollReveal();
+  const parallaxRef = useScrollParallax();
+  return (
+    <section className="projects" id="projects" ref={parallaxRef}>
+      <div className="section-atmosphere projects-atmosphere" data-parallax-layer data-depth="-38" aria-hidden="true" />
+      <div ref={sectionRef}>
+      <div className="section-shell">
+        <div className="section-marker" data-reveal><span>04</span><i /><span>SELECTED WORK</span></div>
+        <div className="section-heading" data-reveal data-scroll-heading>
+          <div><p>IDEAS MADE REAL</p><h2>Selected <em>projects</em></h2></div>
+          <p>A working archive of full-stack products, experiments, and systems built from first principles.</p>
+        </div>
+        <div className="projects-grid" data-reveal>{projects.map((project, index) => <ProjectCard key={project.number} project={project} index={index} onOpen={setSelectedProject} />)}</div>
+        <div className="projects-footer" data-reveal><span><b>{projects.length}</b> PROJECTS IN ORBIT</span><a className="cursor-can-hover" href="https://github.com/papneetswain4-alt" target="_blank" rel="noreferrer">MORE ON GITHUB ↗</a></div>
       </div>
+      </div>
+      <AnimatePresence>{selectedProject && <ProjectModal project={selectedProject} onClose={() => setSelectedProject(null)} />}</AnimatePresence>
     </section>
   );
 }

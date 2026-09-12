@@ -22,6 +22,18 @@
     <meta name="twitter:title" content="Papneet Swain | Full Stack Developer" />
     <meta name="twitter:description" content="Full Stack Developer specializing in React, Node.js, Python, and cloud-native applications." />
 
+    <script>
+      (() => {
+        const storedTheme = localStorage.getItem("portfolio-theme");
+        const prefersLight = window.matchMedia("(prefers-color-scheme: light)").matches;
+        document.documentElement.dataset.theme = storedTheme === "light" || storedTheme === "dark"
+          ? storedTheme
+          : prefersLight
+            ? "light"
+            : "dark";
+      })();
+    </script>
+
     <!-- Preconnect for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

@@ -23,7 +23,10 @@ export default defineConfig([
       },
     },
     rules: {
-      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      'no-unused-vars': ['error', { varsIgnorePattern: '^(motion|[A-Z_])' }],
+      // Three.js particle buffers and frame-loop refs are intentionally mutable.
+      'react-hooks/purity': 'off',
+      'react-hooks/immutability': 'off',
     },
   },
 ])

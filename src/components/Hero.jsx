@@ -1,761 +1,146 @@
-import { useEffect, useState, useRef } from "react";
-import {
-  motion,
-  useMotionValue,
-  useSpring,
-  useTransform
-} from "framer-motion";
-import { FaGithub } from "react-icons/fa";
+import { useEffect, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { FaArrowDown, FaArrowUpRightFromSquare, FaGithub, FaLinkedin } from "react-icons/fa6";
+import { useScrollParallax } from "../hooks/useScrollParallax";
 
-// Magnetic Button Component
-const MagneticButton = ({
-  children,
-  className,
-  onClick,
-  style,
-  whileHover
-}) => {
-  const ref = useRef(null);
-
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-
-  const springConfig = {
-    stiffness: 150,
-    damping: 15,
-    mass: 0.1
-  };
-
-  const smoothX = useSpring(
-    x,
-    springConfig
-  );
-
-  const smoothY = useSpring(
-    y,
-    springConfig
-  );
-
-  const handleMouse = (e) => {
-    const {
-      clientX,
-      clientY
-    } = e;
-
-    const {
-      height,
-      width,
-      left,
-      top
-    } =
-      ref.current.getBoundingClientRect();
-
-    const middleX =
-      clientX -
-      (left + width / 2);
-
-    const middleY =
-      clientY -
-      (top + height / 2);
-
-    x.set(middleX * 0.2);
-    y.set(middleY * 0.2);
-  };
-
-  const handleMouseLeave = () => {
-    x.set(0);
-    y.set(0);
-  };
-
-  return (
-    <motion.button
-      ref={ref}
-      onMouseMove={handleMouse}
-      onMouseLeave={handleMouseLeave}
-      className={className}
-      onClick={onClick}
-      style={{
-        x: smoothX,
-        y: smoothY,
-        ...style
-      }}
-      whileHover={whileHover}
-      whileTap={{
-        scale: 0.95
-      }}
-    >
-      <motion.span
-        style={{
-          x: useTransform(
-            smoothX,
-            (v) => v * 0.5
-          ),
-          y: useTransform(
-            smoothY,
-            (v) => v * 0.5
-          ),
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "8px"
-        }}
-      >
-        {children}
-      </motion.span>
-    </motion.button>
-  );
+const links = {
+  github: "https://github.com/papneetswain4-alt",
+  linkedin: "https://www.linkedin.com/in/papneet-swain-92a2b9343/",
 };
 
+export default function Hero({ startHero }) {
+  const roles = ["PROBLEM SOLVER", "DEVELOPER", "SOFTWARE ENGINEER", "FULL STACK DEVELOPER"];
+  const [roleIndex, setRoleIndex] = useState(0);
+  const reduceMotion = useReducedMotion();
+  const sectionRef = useScrollParallax();
+  const entranceEase = [0.16, 1, 0.3, 1];
 
-/* =====================================================
-   HERO
-===================================================== */
-
-export default function Hero({
-  startHero
-}) {
-  const roles = [
-    "Full Stack Developer",
-    "Web Developer",
-    "Problem Solver",
-    "Open Source Enthusiast"
-  ];
-
-  const [text, setText] =
-    useState("");
-
-  const [index, setIndex] =
-    useState(0);
-
-  const [isDeleting, setIsDeleting] =
-    useState(false);
-
-
-  /* =================================================
-     HERO SCROLL PROGRESS
-
-     0 = Hero completely visible
-     1 = Hero leaving the viewport
-  ================================================= */
-
-  const heroRef = useRef(null);
-
-  const [heroProgress, setHeroProgress] =
-    useState(0);
-
-
-  useEffect(() => {
-    const updateHeroProgress = () => {
-      if (!heroRef.current) return;
-
-      const rect =
-        heroRef.current.getBoundingClientRect();
-
-      const viewportHeight =
-        window.innerHeight;
-
-      /*
-        Hero begins at:
-        rect.top
-
-        Hero ends at:
-        rect.bottom
-      */
-
-      const progress =
-        THREE_CLAMP(
-          -rect.top /
-            Math.max(
-              rect.height - viewportHeight,
-              1
-            ),
-          0,
-          1
-        );
-
-      setHeroProgress(progress);
-    };
-
-
-    updateHeroProgress();
-
-    window.addEventListener(
-      "scroll",
-      updateHeroProgress,
-      {
-        passive: true
-      }
-    );
-
-    window.addEventListener(
-      "resize",
-      updateHeroProgress
-    );
-
-    return () => {
-      window.removeEventListener(
-        "scroll",
-        updateHeroProgress
-      );
-
-      window.removeEventListener(
-        "resize",
-        updateHeroProgress
-      );
-    };
-  }, []);
-
-
-  /*
-    We expose the value globally for the
-    3D universe.
-
-    This is temporary architecture.
-    Later we'll replace this with a proper
-    shared scroll controller.
-  */
-
-  useEffect(() => {
-    window.__heroProgress =
-      heroProgress;
-  }, [heroProgress]);
-
-
-  /* =================================================
-     NAME
-  ================================================= */
-
-  const name =
-    "Papneet";
-
-
-  /* =================================================
-     MOUSE PARALLAX
-  ================================================= */
-
-  const mouseX =
-    useMotionValue(0);
-
-  const mouseY =
-    useMotionValue(0);
-
-  const smoothX =
-    useSpring(
-      mouseX,
-      {
-        stiffness: 40,
-        damping: 18
-      }
-    );
-
-  const smoothY =
-    useSpring(
-      mouseY,
-      {
-        stiffness: 40,
-        damping: 18
-      }
-    );
-
-  const depthX =
-    useTransform(
-      smoothX,
-      (val) => val * 1.5
-    );
-
-  const depthY =
-    useTransform(
-      smoothY,
-      (val) => val * 1.5
-    );
-
-
-  useEffect(() => {
-    if (!startHero) return;
-
-    const handleMouseMove = (e) => {
-      mouseX.set(
-        (
-          e.clientX -
-          window.innerWidth / 2
-        ) / 100
-      );
-
-      mouseY.set(
-        (
-          e.clientY -
-          window.innerHeight / 2
-        ) / 100
-      );
-    };
-
-    window.addEventListener(
-      "mousemove",
-      handleMouseMove
-    );
-
-    return () => {
-      window.removeEventListener(
-        "mousemove",
-        handleMouseMove
-      );
-    };
-  }, [
-    startHero,
-    mouseX,
-    mouseY
-  ]);
-
-
-  /* =================================================
-     TYPING EFFECT
-  ================================================= */
-
-  useEffect(() => {
-    if (!startHero) return;
-
-    const current =
-      roles[index];
-
-    const speed =
-      isDeleting
-        ? 35
-        : 80;
-
-    const handleTyping = () => {
-      if (!isDeleting) {
-        setText(
-          current.substring(
-            0,
-            text.length + 1
-          )
-        );
-
-        if (text === current) {
-          setTimeout(
-            () =>
-              setIsDeleting(true),
-            1500
-          );
-        }
-      } else {
-        setText(
-          current.substring(
-            0,
-            text.length - 1
-          )
-        );
-
-        if (text === "") {
-          setIsDeleting(false);
-
-          setIndex(
-            (prev) =>
-              (prev + 1) %
-              roles.length
-          );
-        }
-      }
-    };
-
-    const timer =
-      setTimeout(
-        handleTyping,
-        speed
-      );
-
-    return () =>
-      clearTimeout(timer);
-
-  }, [
-    text,
-    isDeleting,
-    index,
-    startHero
-  ]);
-
-
-  /* =================================================
-     SCROLL TO SECTION
-  ================================================= */
-
-  const scrollTo = (id) => {
-    const el =
-      document.getElementById(id);
-
-    if (el) {
-      const targetPosition =
-        el.getBoundingClientRect()
-          .top +
-        window.scrollY -
-        100;
-
-      window.scrollTo({
-        top: targetPosition,
-        behavior: "smooth"
-      });
-    }
+  const itemVariants = {
+    hidden: reduceMotion
+      ? { opacity: 0 }
+      : { opacity: 0, y: 18, filter: "blur(8px)" },
+    visible: {
+      opacity: 1,
+      y: 0,
+      filter: "blur(0px)",
+      transition: {
+        duration: reduceMotion ? 0.01 : 1.08,
+        ease: entranceEase,
+      },
+    },
   };
 
+  const wordVariants = {
+    hidden: reduceMotion
+      ? { opacity: 0 }
+      : { opacity: 0, y: 24, rotateX: -35, filter: "blur(10px)" },
+    visible: (index) => ({
+      opacity: 1,
+      y: 0,
+      rotateX: 0,
+      filter: "blur(0px)",
+      transition: {
+        duration: reduceMotion ? 0.01 : 1.28,
+        delay: reduceMotion ? 0 : 0.2 + index * 0.075,
+        ease: entranceEase,
+      },
+    }),
+  };
 
-  /* =================================================
-     RENDER
-  ================================================= */
+  const ctaVariants = {
+    hidden: reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.96 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: reduceMotion
+        ? { duration: 0.01 }
+        : { type: "tween", duration: 1.15, ease: [0.16, 1, 0.3, 1] },
+    },
+  };
 
+  useEffect(() => {
+    if (reduceMotion || !startHero) return undefined;
+    const timer = window.setInterval(() => {
+      setRoleIndex((current) => (current + 1) % roles.length);
+    }, 4800);
+    return () => window.clearInterval(timer);
+  }, [reduceMotion, startHero, roles.length]);
+
+  const scrollTo = (id) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   return (
-    <section
-      ref={heroRef}
-      className="hero"
-      id="home"
-    >
-
-      {/* HERO BACKGROUND */}
-
+    <section className="hero" id="home" ref={sectionRef}>
+      <div className="hero-grid" data-parallax-layer data-depth="-42" />
       <motion.div
-        className="hero-bg-glow"
-        animate={{
-          scale: [
-            1,
-            1.1,
-            1
-          ],
-          opacity: [
-            0.3,
-            0.6,
-            0.3
-          ]
-        }}
-        transition={{
-          duration: 8,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      />
-
-
-      {/* HERO CONTENT */}
-
-      <motion.div
-        initial={{
-          opacity: 0,
-          y: 60,
-          scale: 0.97
-        }}
-        animate={
-          startHero
-            ? {
-                opacity: 1,
-                y: 0,
-                scale: 1
-              }
-            : {}
-        }
-        transition={{
-          duration: 1,
-          ease: [
-            0.16,
-            1,
-            0.3,
-            1
-          ]
-        }}
-        style={{
-          x: depthX,
-          y: depthY
-        }}
         className="hero-content"
+        initial="hidden"
+        animate={startHero ? "visible" : "hidden"}
+        variants={{
+          hidden: reduceMotion
+            ? { opacity: 0 }
+            : { opacity: 0, y: 10, filter: "blur(5px)" },
+          visible: {
+            opacity: 1,
+            y: 0,
+            filter: "blur(0px)",
+            transition: {
+              duration: reduceMotion ? 0.01 : 1.5,
+              ease: entranceEase,
+              staggerChildren: reduceMotion ? 0 : 0.15,
+              delayChildren: reduceMotion ? 0 : 0.08,
+            },
+          },
+        }}
       >
-
-        {/* GREETING */}
-
-        <motion.p
-          className="hero-greeting"
-          initial={{
-            opacity: 0,
-            y: 20
-          }}
-          animate={
-            startHero
-              ? {
-                  opacity: 1,
-                  y: 0
-                }
-              : {}
-          }
-          transition={{
-            delay: 0.3,
-            duration: 0.8
-          }}
-        >
-          Welcome to my portfolio
-        </motion.p>
-
-
-        {/* TITLE */}
-
-        <h1 className="hero-title">
-
-          <motion.span
-            initial={{
-              opacity: 0
-            }}
-            animate={
-              startHero
-                ? {
-                    opacity: 1
-                  }
-                : {}
-            }
-            transition={{
-              delay: 0.5,
-              duration: 0.8
-            }}
-          >
-            Hi, I'm{" "}
-          </motion.span>
-
-
-          <span className="hero-name-split">
-
-            {name
-              .split("")
-              .map(
-                (
-                  char,
-                  i
-                ) => (
-                  <motion.span
-                    key={i}
-                    initial={{
-                      opacity: 0,
-                      y: 40,
-                      rotateX: -90
-                    }}
-                    animate={
-                      startHero
-                        ? {
-                            opacity: 1,
-                            y: 0,
-                            rotateX: 0
-                          }
-                        : {}
-                    }
-                    transition={{
-                      delay:
-                        0.6 +
-                        i *
-                          0.05,
-                      duration:
-                        0.8,
-                      type:
-                        "spring",
-                      damping:
-                        12,
-                      stiffness:
-                        100
-                    }}
-                    style={{
-                      display:
-                        "inline-block",
-                      color:
-                        "var(--primary-color)"
-                    }}
-                  >
-                    {char}
-                  </motion.span>
-                )
-              )}
-
-          </span>
-
+        <motion.p className="hero-kicker" variants={itemVariants}><span /> HI, I&apos;M</motion.p>
+        <h1 aria-label="Papneet">
+          {"PAPNEET".split("").map((letter, index) => (
+            <motion.span
+              key={`${letter}-${index}`}
+              custom={index}
+              variants={wordVariants}
+              initial="hidden"
+              animate={startHero ? "visible" : "hidden"}
+              style={{ display: "inline-block", transformOrigin: "50% 100%" }}
+            >
+              {letter}
+            </motion.span>
+          ))}
+          <motion.em variants={itemVariants}>.</motion.em>
         </h1>
-
-
-        {/* TYPING */}
-
-        <motion.p
-          className="typing-text"
-          initial={{
-            opacity: 0
-          }}
-          animate={
-            startHero
-              ? {
-                  opacity: 1
-                }
-              : {}
-          }
-          transition={{
-            delay: 1.1,
-            duration: 0.8
-          }}
-        >
-          I'm a{" "}
-          <span className="highlight">
-            {text}
+        <motion.div className="hero-role" aria-live="polite" variants={itemVariants}>
+          <i aria-hidden="true" />
+          <span className="hero-role-viewport">
+            <AnimatePresence initial={false} mode="wait">
+              <motion.span
+                className="hero-role-text"
+                key={roles[roleIndex]}
+                initial={reduceMotion ? false : { opacity: 0, y: 12, filter: "blur(6px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                exit={reduceMotion ? undefined : { opacity: 0, y: -10, filter: "blur(5px)" }}
+                transition={{
+                  duration: reduceMotion ? 0 : 0.92,
+                  ease: [0.42, 0, 0.58, 1],
+                }}
+              >
+                {roles[roleIndex]}
+              </motion.span>
+            </AnimatePresence>
           </span>
-
-          <motion.span
-            className="cursor"
-            animate={{
-              opacity: [
-                1,
-                0,
-                1
-              ]
-            }}
-            transition={{
-              duration: 1,
-              repeat:
-                Infinity
-            }}
-          >
-            |
-          </motion.span>
-
-        </motion.p>
-
-
-        {/* DESCRIPTION */}
-
-        <motion.p
-          className="hero-description"
-          initial={{
-            opacity: 0,
-            y: 20
-          }}
-          animate={
-            startHero
-              ? {
-                  opacity: 1,
-                  y: 0
-                }
-              : {}
-          }
-          transition={{
-            delay: 1.3,
-            duration: 0.8
-          }}
-        >
-          I build scalable web applications
-          with modern technologies.
-          Passionate about clean code,
-          performance, and great user
-          experiences.
-        </motion.p>
-
-
-        {/* CTA */}
-
-        <motion.div
-          className="hero-cta"
-          initial={{
-            opacity: 0,
-            y: 20
-          }}
-          animate={
-            startHero
-              ? {
-                  opacity: 1,
-                  y: 0
-                }
-              : {}
-          }
-          transition={{
-            delay: 1.5,
-            duration: 0.8
-          }}
-        >
-
-          <MagneticButton
-            className="btn-primary"
-            whileHover={{
-              scale: 1.05,
-              boxShadow:
-                "0 0 30px rgba(225,6,0,0.4)"
-            }}
-            onClick={() =>
-              scrollTo(
-                "projects"
-              )
-            }
-          >
-            View Projects
-          </MagneticButton>
-
-
-          <MagneticButton
-            className="btn-secondary"
-            whileHover={{
-              scale: 1.05
-            }}
-            onClick={() =>
-              window.open(
-                "https://github.com/papneetswain4-alt",
-                "_blank"
-              )
-            }
-          >
-            <FaGithub />
-            GitHub
-          </MagneticButton>
-
-
-          <MagneticButton
-            className="btn-outline"
-            whileHover={{
-              scale: 1.05
-            }}
-            onClick={() =>
-              scrollTo(
-                "contact"
-              )
-            }
-          >
-            Contact Me
-          </MagneticButton>
-
         </motion.div>
-
+        <motion.p className="hero-description" variants={itemVariants}>Computer Science Engineering student building modern software and exploring full-stack development &amp; AI.</motion.p>
+        <motion.div className="hero-actions" variants={itemVariants}>
+          <motion.button className="button button-solid cursor-can-hover" variants={ctaVariants} onClick={() => scrollTo("projects")}>VIEW PROJECTS <FaArrowUpRightFromSquare /></motion.button>
+          <motion.button className="button button-ghost cursor-can-hover" variants={ctaVariants} onClick={() => scrollTo("contact")}>CONTACT ME <FaArrowUpRightFromSquare /></motion.button>
+        </motion.div>
+        <motion.div className="hero-links" variants={itemVariants}>
+          <motion.a href={links.github} target="_blank" rel="noreferrer" variants={ctaVariants}><FaGithub /> GITHUB</motion.a>
+          <motion.a href={links.linkedin} target="_blank" rel="noreferrer" variants={ctaVariants}><FaLinkedin /> LINKEDIN</motion.a>
+          <motion.a href="#contact" variants={ctaVariants}><span className="hero-link-dot" /> AVAILABLE FOR OPPORTUNITIES</motion.a>
+        </motion.div>
       </motion.div>
-
-
-      {/* FLOATING ORB */}
-
-      <motion.div
-        className="floating-orb"
-        animate={{
-          y: [
-            0,
-            -20,
-            0
-          ]
-        }}
-        transition={{
-          duration: 6,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      />
-
+      <div className="hero-aside"><span>PERSONAL UNIVERSE / 2026</span><span>05°12&apos; N / 085°50&apos; E</span></div>
+      <button className="scroll-cue cursor-can-hover" onClick={() => scrollTo("about")} aria-label="Scroll to about"><span>SCROLL TO EXPLORE</span><FaArrowDown /></button>
     </section>
-  );
-}
-
-
-/* =====================================================
-   SMALL CLAMP HELPER
-===================================================== */
-
-function THREE_CLAMP(
-  value,
-  min,
-  max
-) {
-  return Math.min(
-    Math.max(
-      value,
-      min
-    ),
-    max
   );
 }

@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "realtime:server": "node server/index.js"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
@@ -21,6 +22,8 @@
     "react-dom": "^19.2.0",
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.13.0",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
     "three": "^0.182.0"
   },
   "devDependencies": {

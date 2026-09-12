@@ -61,6 +61,21 @@ const sectionVisualState = {
   targetFocus: 0,
 };
 
+const projectHoverState = {
+  current: 0,
+  target: 0,
+};
+
+const SECTION_VISUAL_PROFILES = [
+  { intensity: 0.18, motion: 0.12, energy: 0.18 },
+  { intensity: 0.1, motion: 0.16, energy: 0.12 },
+  { intensity: 0.38, motion: 0.48, energy: 0.42 },
+  { intensity: 0.3, motion: 0.4, energy: 0.3 },
+  { intensity: 0.62, motion: 0.58, energy: 0.68 },
+  { intensity: 0.5, motion: 0.65, energy: 0.58 },
+  { intensity: 0.14, motion: 0.12, energy: 0.16 },
+];
+
 
 /* =====================================================
    CORE POSITION
@@ -81,7 +96,7 @@ function BackgroundStars() {
   const pointsRef = useRef();
   const { mouse } = useThree();
 
-  const particleCount = 3000;
+  const particleCount = typeof window !== "undefined" && window.innerWidth < 768 ? 1500 : 3000;
 
   const positions = useMemo(() => {
     const data = new Float32Array(
@@ -125,7 +140,7 @@ function BackgroundStars() {
     }
 
     return data;
-  }, []);
+  }, [particleCount]);
 
   useFrame((state) => {
     if (!pointsRef.current) return;
@@ -174,11 +189,11 @@ function BackgroundStars() {
     ------------------------------------------------- */
 
     const targetX =
-      -mouse.x * 0.08 +
+      -mouse.x * 0.045 +
       Math.sin(pageProgress * Math.PI) * 0.025;
 
     const targetY =
-      -mouse.y * 0.08 +
+      -mouse.y * 0.045 +
       Math.cos(pageProgress * Math.PI) * 0.02;
 
     pointsRef.current.position.x +=
@@ -200,7 +215,7 @@ function BackgroundStars() {
 
     const scrollOffset =
       Math.min(
-        scrollState.current * 0.00045,
+        scrollState.current * 0.00032,
         1.8
       );
 
@@ -283,6 +298,64 @@ function BackgroundStars() {
 
 
 /* =====================================================
+   LAYER 1.5: SLOW DRIFTING GLOW STARS
+===================================================== */
+
+function DriftingGlowStars() {
+  const pointsRef = useRef();
+  const { mouse } = useThree();
+  const isCompact = typeof window !== "undefined" && window.innerWidth < 768;
+  const glowCount = isCompact ? 7 : 16;
+
+  const positions = useMemo(() => {
+    const data = new Float32Array(glowCount * 3);
+
+    for (let index = 0; index < glowCount; index += 1) {
+      const i3 = index * 3;
+      data[i3] = (Math.random() - 0.5) * 30;
+      data[i3 + 1] = (Math.random() - 0.5) * 22;
+      data[i3 + 2] = (Math.random() - 0.5) * 12 - 9;
+    }
+
+    return data;
+  }, [glowCount]);
+
+  useFrame((state) => {
+    if (!pointsRef.current) return;
+
+    const time = state.clock.elapsedTime;
+    const pageProgress = sectionState.progress;
+    const targetX = -mouse.x * 0.11 + Math.sin(pageProgress * Math.PI) * 0.04;
+    const targetY = -mouse.y * 0.09 + Math.cos(pageProgress * Math.PI) * 0.03;
+
+    pointsRef.current.position.x += (targetX - pointsRef.current.position.x) * 0.018;
+    pointsRef.current.position.y += (targetY - pointsRef.current.position.y) * 0.018;
+    pointsRef.current.position.z += (-scrollState.current * 0.00058 - pointsRef.current.position.z) * 0.012;
+    pointsRef.current.rotation.z = Math.sin(time * 0.035) * 0.025;
+  });
+
+  return (
+    <Points
+      ref={pointsRef}
+      positions={positions}
+      stride={3}
+      frustumCulled={false}
+    >
+      <PointMaterial
+        transparent
+        color="#aaccff"
+        size={0.12}
+        sizeAttenuation
+        depthWrite={false}
+        opacity={0.22}
+        blending={THREE.AdditiveBlending}
+      />
+    </Points>
+  );
+}
+
+
+/* =====================================================
    LAYER 2: MIDGROUND STARS
 ===================================================== */
 
@@ -292,8 +365,9 @@ function MidgroundStars() {
 
   const { mouse } = useThree();
 
-  const whiteCount = 1500;
-  const redCount = 300;
+  const isCompact = typeof window !== "undefined" && window.innerWidth < 768;
+  const whiteCount = isCompact ? 750 : 1500;
+  const redCount = isCompact ? 140 : 300;
 
 
   /* -----------------------------------------------------
@@ -342,7 +416,7 @@ function MidgroundStars() {
     }
 
     return data;
-  }, []);
+  }, [whiteCount]);
 
 
   /* -----------------------------------------------------
@@ -391,7 +465,7 @@ function MidgroundStars() {
     }
 
     return data;
-  }, []);
+  }, [redCount]);
 
 
   /* -----------------------------------------------------
@@ -448,11 +522,11 @@ function MidgroundStars() {
       /* Cursor */
 
       const targetX =
-        -mouse.x * 0.18 +
+        -mouse.x * 0.14 +
         Math.sin(pageProgress * Math.PI) * 0.05;
 
       const targetY =
-        -mouse.y * 0.18 +
+        -mouse.y * 0.14 +
         Math.cos(pageProgress * Math.PI) * 0.035;
 
       whitePointsRef.current.position.x +=
@@ -472,7 +546,7 @@ function MidgroundStars() {
 
       const scrollOffset =
         Math.min(
-          scrollState.current * 0.0009,
+          scrollState.current * 0.00078,
           3
         );
 
@@ -521,11 +595,11 @@ function MidgroundStars() {
       /* Cursor */
 
       const targetX =
-        -mouse.x * 0.24 +
+        -mouse.x * 0.2 +
         Math.sin(pageProgress * Math.PI) * 0.07;
 
       const targetY =
-        -mouse.y * 0.24 +
+        -mouse.y * 0.2 +
         Math.cos(pageProgress * Math.PI) * 0.05;
 
       redPointsRef.current.position.x +=
@@ -545,7 +619,7 @@ function MidgroundStars() {
 
       const scrollOffset =
         Math.min(
-          scrollState.current * 0.0012,
+          scrollState.current * 0.00105,
           4
         );
 
@@ -617,6 +691,7 @@ function MidgroundStars() {
 
 function CentralCore() {
   const groupRef = useRef();
+  const coreOpacity = useRef(1);
 
   const { mouse } = useThree();
 
@@ -643,6 +718,42 @@ function CentralCore() {
 
     const focus =
       sectionVisualState.focus;
+
+    const skillsFocus =
+      THREE.MathUtils.clamp(
+        1 -
+        Math.abs(sectionState.index - 2),
+        0,
+        1
+      );
+
+    const targetOpacity =
+      1 -
+      skillsFocus * 0.78;
+
+    coreOpacity.current +=
+      (
+        targetOpacity -
+        coreOpacity.current
+      ) * 0.06;
+
+    groupRef.current.traverse((child) => {
+      if (!child.material) return;
+
+      const materials = Array.isArray(child.material)
+        ? child.material
+        : [child.material];
+
+      materials.forEach((material) => {
+        if (material.userData.coreBaseOpacity === undefined) {
+          material.userData.coreBaseOpacity = material.opacity;
+        }
+
+        material.opacity =
+          material.userData.coreBaseOpacity *
+          coreOpacity.current;
+      });
+    });
 
 
     /* =================================================
@@ -1282,7 +1393,7 @@ function MorphParticles() {
 
   const { mouse } = useThree();
 
-  const particleCount = 1200;
+  const particleCount = typeof window !== "undefined" && window.innerWidth < 768 ? 500 : 1200;
 
 
   /* -----------------------------------------------------
@@ -1323,7 +1434,7 @@ function MorphParticles() {
     }
 
     return data;
-  }, []);
+  }, [particleCount]);
 
 
   /* -----------------------------------------------------
@@ -1371,7 +1482,7 @@ function MorphParticles() {
     }
 
     return data;
-  }, []);
+  }, [particleCount]);
 
 
   /* -----------------------------------------------------
@@ -1631,17 +1742,24 @@ function ScrollController() {
 ===================================================== */
 
 function HeroUniverseSync() {
+  useEffect(() => {
+    let animationFrame;
+
+    const updateHeroState = () => {
+      const hero = document.getElementById("home");
+      if (hero) {
+        const rect = hero.getBoundingClientRect();
+        const range = Math.max(rect.height - window.innerHeight, 1);
+        heroState.target = THREE.MathUtils.clamp(-rect.top / range, 0, 1);
+      }
+      animationFrame = requestAnimationFrame(updateHeroState);
+    };
+
+    updateHeroState();
+    return () => cancelAnimationFrame(animationFrame);
+  }, []);
+
   useFrame(() => {
-    const heroProgress =
-      window.__heroProgress ?? 0;
-
-    heroState.target =
-      THREE.MathUtils.clamp(
-        heroProgress,
-        0,
-        1
-      );
-
     heroState.progress +=
       (
         heroState.target -
@@ -1827,10 +1945,15 @@ function SectionUniverseSync() {
 ===================================================== */
 
 function SectionVisualSync() {
-  useFrame(() => {
+  useEffect(() => {
+    const handleProjectHover = (event) => {
+      projectHoverState.target = event.detail?.active ? 1 : 0;
+    };
+    window.addEventListener("galaxy-project-hover", handleProjectHover);
+    return () => window.removeEventListener("galaxy-project-hover", handleProjectHover);
+  }, []);
 
-    const pageProgress =
-      sectionState.progress;
+  useFrame(() => {
 
     const sectionIndex =
       sectionState.index;
@@ -1838,33 +1961,23 @@ function SectionVisualSync() {
     const localProgress =
       sectionState.localProgress;
 
+    projectHoverState.current +=
+      (projectHoverState.target - projectHoverState.current) * 0.08;
+
 
     /* =================================================
        STEP 5.1
     ================================================= */
 
-    sectionVisualState.targetIntensity =
-      THREE.MathUtils.clamp(
-        pageProgress * 1.15,
-        0,
-        1
-      );
+    const profile = SECTION_VISUAL_PROFILES[Math.min(Math.round(sectionIndex), SECTION_VISUAL_PROFILES.length - 1)];
 
-
-    sectionVisualState.targetMotion =
-      THREE.MathUtils.clamp(
-        sectionIndex / 5,
-        0,
-        1
-      );
-
-
-    sectionVisualState.targetEnergy =
-      THREE.MathUtils.clamp(
-        pageProgress * 1.25,
-        0,
-        1
-      );
+    sectionVisualState.targetIntensity = profile.intensity;
+    sectionVisualState.targetMotion = profile.motion;
+    sectionVisualState.targetEnergy = THREE.MathUtils.clamp(
+      profile.energy + projectHoverState.current * 0.05,
+      0,
+      1
+    );
 
 
     /* =================================================
@@ -1881,12 +1994,7 @@ function SectionVisualSync() {
       1 → deepest / strongest section
     */
 
-    sectionVisualState.targetZone =
-      THREE.MathUtils.clamp(
-        sectionIndex / 5,
-        0,
-        1
-      );
+    sectionVisualState.targetZone = THREE.MathUtils.clamp(sectionIndex / 6, 0, 1);
 
 
     /* =================================================
@@ -1949,6 +2057,37 @@ function SectionVisualSync() {
         sectionVisualState.focus
       ) * 0.05;
   });
+
+  return null;
+}
+
+
+/* =====================================================
+   PAGE VISIBILITY CONTROLLER
+===================================================== */
+
+function PageVisibilityController() {
+  const { invalidate, setFrameloop } = useThree();
+
+  useEffect(() => {
+    const updateVisibility = () => {
+      if (document.hidden) {
+        setFrameloop("never");
+        return;
+      }
+
+      setFrameloop("always");
+      invalidate();
+    };
+
+    updateVisibility();
+    document.addEventListener("visibilitychange", updateVisibility);
+
+    return () => {
+      document.removeEventListener("visibilitychange", updateVisibility);
+      setFrameloop("always");
+    };
+  }, [invalidate, setFrameloop]);
 
   return null;
 }
@@ -2201,7 +2340,11 @@ export default function WebBackground() {
           far: 100
         }}
 
-        dpr={[1, 1.5]}
+        dpr={
+          typeof window !== "undefined" && window.innerWidth < 768
+            ? [0.7, 1]
+            : [1, 1.5]
+        }
 
         gl={{
           antialias: true,
@@ -2211,15 +2354,13 @@ export default function WebBackground() {
         }}
       >
 
-        <color
-          attach="background"
-          args={["#030305"]}
-        />
 
 
         {/* =================================================
             CONTROLLERS
         ================================================= */}
+
+        <PageVisibilityController />
 
         <ScrollController />
 
@@ -2237,6 +2378,8 @@ export default function WebBackground() {
         ================================================= */}
 
         <BackgroundStars />
+
+        <DriftingGlowStars />
 
         <MidgroundStars />
 

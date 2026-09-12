@@ -80,7 +80,6 @@ npm run dev
 - Dark/Light Theme Toggle
 - Project Filtering
 - More Animations
-- Download Resume Button
 
 ---
 

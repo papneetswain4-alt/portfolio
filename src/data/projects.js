@@ -1,0 +1,67 @@
+export const projects = [
+  {
+    number: "01",
+    featured: true,
+    title: "TITLE VERIFICATION SYSTEM",
+    category: "ARTIFICIAL INTELLIGENCE / NLP",
+    description:
+      "An AI-powered title verification system that validates publication titles using phonetic matching, semantic similarity, NLP algorithms, and automated probability scoring.",
+    technologies: ["React", "Node.js", "Express", "Python", "NLP", "PostgreSQL", "Docker"],
+    features: ["Phonetic matching", "Semantic similarity scoring", "Automated probability analysis"],
+    status: "COMPLETED",
+    github: "https://github.com/papneetswain4-alt/title-verification-system",
+    demo: "https://title-verification-system.netlify.app/",
+  },
+  {
+    number: "02",
+    featured: true,
+    title: "FOODIFY",
+    category: "FULL STACK WEB APPLICATION",
+    description:
+      "A full-stack online food ordering system with restaurant menus, Google authentication, cart management, order tracking, and an admin dashboard.",
+    technologies: ["HTML", "CSS", "JavaScript", "Node.js", "Express", "MongoDB", "Netlify", "Render"],
+    features: ["Authenticated ordering flow", "Admin restaurant management", "Order activity tracking"],
+    status: "COMPLETED",
+    github: "https://github.com/papneetswain4-alt/restaurant-ordering-system",
+    demo: "https://foodily-orders.netlify.app/",
+  },
+  {
+    number: "03",
+    featured: false,
+    title: "DEV TRACKER",
+    category: "FULL STACK / DEVELOPER PRODUCTIVITY",
+    description:
+      "A productivity platform for tracking coding hours, problems solved, streaks, goals, and GitHub-style contribution activity.",
+    technologies: ["React", "Node.js", "Express", "MongoDB", "JWT", "Recharts", "Netlify", "Render"],
+    features: ["Developer analytics", "Goal tracking", "Contribution visualization"],
+    status: "COMPLETED",
+    github: "https://github.com/papneetswain4-alt/Dev-tracker",
+    demo: "https://dev-tracker-mern.netlify.app/",
+  },
+  {
+    number: "04",
+    featured: false,
+    title: "ALUMNI PORTAL",
+    category: "DJANGO / UNIVERSITY MANAGEMENT",
+    description:
+      "A Django-based university alumni portal connecting alumni and students through profiles, news, events, galleries, and centralized management.",
+    technologies: ["Python", "Django", "MySQL", "HTML", "CSS", "JavaScript"],
+    features: ["Alumni profiles", "Events and news", "Centralized management"],
+    status: "IN DEVELOPMENT",
+    github: "https://github.com/papneetswain4-alt/alumni-portal",
+    demo: "#",
+  },
+  {
+    number: "05",
+    featured: false,
+    title: "PERSONAL PORTFOLIO",
+    category: "FRONTEND / PERSONAL BRAND",
+    description:
+      "A responsive developer portfolio built to showcase projects, technical skills, development experience, and GitHub-powered activity.",
+    technologies: ["React", "Vite", "JavaScript", "HTML5", "CSS3", "Framer Motion"],
+    features: ["Interactive galaxy", "Motion-led navigation", "Live GitHub activity"],
+    status: "COMPLETED",
+    github: "https://github.com/papneetswain4-alt/portfolio",
+    demo: "https://spidey-portfolio.netlify.app/",
+  },
+];

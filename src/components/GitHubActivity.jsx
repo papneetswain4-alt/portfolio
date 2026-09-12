@@ -1,615 +1,87 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import {
-  FaGithub,
-  FaStar,
-  FaCodeBranch,
-  FaUsers,
-  FaCode,
-  FaArrowUpRightFromSquare,
-} from "react-icons/fa6";
+import { FaGithub } from "react-icons/fa";
 
-const GITHUB_USERNAME = "papneetswain4-alt";
+const USERNAME = "papneetswain4-alt";
+const colors = { JavaScript: "#f1e05a", Python: "#3572A5", HTML: "#e34c26", CSS: "#563d7c", Java: "#b07219", TypeScript: "#3178c6" };
 
-const languageColors = {
-  JavaScript: "#f1e05a",
-  TypeScript: "#3178c6",
-  Python: "#3572A5",
-  Java: "#b07219",
-  HTML: "#e34c26",
-  CSS: "#563d7c",
-  C: "#555555",
-  "C++": "#f34b7d",
-  Shell: "#89e051",
-  PHP: "#4F5D95",
-  EJS: "#a91e50",
-};
-
-const fadeUp = {
-  hidden: {
-    opacity: 0,
-    y: 30,
-  },
-
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.65,
-      ease: "easeOut",
-    },
-  },
-};
-
-const containerVariants = {
-  hidden: {},
-
-  visible: {
-    transition: {
-      staggerChildren: 0.12,
-    },
-  },
-};
-
-function formatDate(date) {
-  if (!date) return "";
-
-  return new Date(date).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
+const Header = () => (
+  <>
+    <div className="section-marker"><span>05</span><i /><span>GITHUB / OPEN SOURCE</span></div>
+    <div className="section-heading"><div><p>LIVE DEVELOPMENT SIGNALS</p><h2>Code in <em>motion</em></h2></div><p>A live, lightweight snapshot of the public work and technologies shaping my current orbit.</p></div>
+  </>
+);
 
 export default function GitHubActivity() {
   const [profile, setProfile] = useState(null);
   const [repos, setRepos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    const fetchGithubData = async () => {
-      try {
-        const [profileResponse, reposResponse] = await Promise.all([
-          fetch(`https://api.github.com/users/${GITHUB_USERNAME}`),
-
-          fetch(
-            `https://api.github.com/users/${GITHUB_USERNAME}/repos?per_page=100&sort=updated&type=public`
-          ),
-        ]);
-
-        if (!profileResponse.ok || !reposResponse.ok) {
-          throw new Error("GitHub request failed");
-        }
-
-        const profileData = await profileResponse.json();
-        const reposData = await reposResponse.json();
-
-        if (!Array.isArray(reposData)) {
-          throw new Error("Invalid GitHub response");
-        }
-
-        setProfile(profileData);
-
-        const ownRepos = reposData
-          .filter((repo) => !repo.fork)
-          .sort(
-            (a, b) =>
-              new Date(b.updated_at) - new Date(a.updated_at)
-          );
-
-        setRepos(ownRepos);
-      } catch (err) {
-        console.error("GitHub activity error:", err);
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchGithubData();
-  }, []);
-
-  /* =========================
-     GITHUB METRICS
-  ========================= */
-
-  const totalStars = repos.reduce(
-    (total, repo) => total + repo.stargazers_count,
-    0
-  );
-
-  const totalForks = repos.reduce(
-    (total, repo) => total + repo.forks_count,
-    0
-  );
-
-  /* =========================
-     LANGUAGE DATA
-  ========================= */
-
-  const languageCount = {};
-
-  repos.forEach((repo) => {
-    if (repo.language) {
-      languageCount[repo.language] =
-        (languageCount[repo.language] || 0) + 1;
+  const [state, setState] = useState("loading");
+  const [theme, setTheme] = useState(() => {
+    if (typeof document !== "undefined") {
+      return document.documentElement.dataset.theme || "dark";
     }
+    return "dark";
   });
 
-  const languages = Object.entries(languageCount)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 6);
+  useEffect(() => {
+    const handleTheme = (e) => setTheme(e.detail);
+    window.addEventListener("portfolio-theme-change", handleTheme);
+    return () => window.removeEventListener("portfolio-theme-change", handleTheme);
+  }, []);
 
-  const totalLanguageRepos = languages.reduce(
-    (total, [, count]) => total + count,
-    0
-  );
+  useEffect(() => {
+    Promise.all([
+      fetch(`https://api.github.com/users/${USERNAME}`),
+      fetch(`https://api.github.com/users/${USERNAME}/repos?per_page=100&sort=updated&type=public`),
+    ])
+      .then(async ([profileResponse, reposResponse]) => {
+        if (!profileResponse.ok || !reposResponse.ok) throw new Error("GitHub unavailable");
+        const profileData = await profileResponse.json();
+        const reposData = await reposResponse.json();
+        setProfile(profileData);
+        setRepos(reposData.filter((repo) => !repo.fork).sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at)));
+        setState("ready");
+      })
+      .catch(() => setState("error"));
+  }, []);
 
-  /* =========================
-     RECENT REPOSITORIES
-  ========================= */
+  const stats = useMemo(() => ({
+    stars: repos.reduce((sum, repo) => sum + repo.stargazers_count, 0),
+    forks: repos.reduce((sum, repo) => sum + repo.forks_count, 0),
+  }), [repos]);
 
-  const recentRepos = repos.slice(0, 4);
-
-  /* =========================
-     LOADING
-  ========================= */
-
-  if (loading) {
-    return (
-      <section className="github-activity" id="github">
-        <div className="github-container">
-
-          <div className="github-header">
-            <div className="github-index">
-              <span>05</span>
-              <i></i>
-              <span>GITHUB ACTIVITY</span>
-            </div>
-          </div>
-
-          <div className="github-heading">
-            <div>
-              <p>OPEN SOURCE / DEVELOPMENT</p>
-
-              <h2>
-                GitHub <span>Activity</span>
-              </h2>
-            </div>
-
-            <p className="github-heading-description">
-              A live snapshot of repositories, contribution
-              activity, development signals and technologies.
-            </p>
-          </div>
-
-          <div className="github-loading">
-            LOADING GITHUB DATA...
-          </div>
-
-        </div>
-      </section>
-    );
-  }
-
-  /* =========================
-     ERROR
-  ========================= */
-
-  if (error) {
-    return (
-      <section className="github-activity" id="github">
-        <div className="github-container">
-
-          <div className="github-header">
-            <div className="github-index">
-              <span>05</span>
-              <i></i>
-              <span>GITHUB ACTIVITY</span>
-            </div>
-          </div>
-
-          <div className="github-heading">
-            <div>
-              <p>OPEN SOURCE / DEVELOPMENT</p>
-
-              <h2>
-                GitHub <span>Activity</span>
-              </h2>
-            </div>
-
-            <p className="github-heading-description">
-              GitHub activity could not be loaded right now.
-            </p>
-          </div>
-
-          <div className="github-error">
-            <FaGithub />
-
-            <span>
-              GITHUB DATA TEMPORARILY UNAVAILABLE
-            </span>
-
-            <a
-              href={`https://github.com/${GITHUB_USERNAME}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              OPEN GITHUB ↗
-            </a>
-          </div>
-
-        </div>
-      </section>
-    );
-  }
+  const languages = useMemo(() => {
+    const counts = {};
+    repos.forEach((repo) => { if (repo.language) counts[repo.language] = (counts[repo.language] || 0) + 1; });
+    const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const total = entries.reduce((sum, [, count]) => sum + count, 0);
+    return entries.map(([name, count]) => [name, Math.round((count / total) * 100)]);
+  }, [repos]);
 
   return (
     <section className="github-activity" id="github">
-
-      <div className="github-container">
-
-        {/* =========================
-            HEADER
-        ========================= */}
-
-        <motion.div
-          className="github-header"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          variants={fadeUp}
-        >
-          <div className="github-index">
-            <span>05</span>
-            <i></i>
-            <span>GITHUB ACTIVITY</span>
-          </div>
-        </motion.div>
-
-
-        {/* =========================
-            HEADING
-        ========================= */}
-
-        <motion.div
-          className="github-heading"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          variants={fadeUp}
-        >
-          <div>
-            <p>OPEN SOURCE / DEVELOPMENT</p>
-
-            <h2>
-              GitHub <span>Activity</span>
-            </h2>
-          </div>
-
-          <p className="github-heading-description">
-            A live snapshot of repositories, contribution
-            activity, development signals and technologies.
-          </p>
-        </motion.div>
-
-
-        {/* =========================
-            ACTIVITY SIGNALS
-        ========================= */}
-
-        <motion.div
-          className="github-signals"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.15 }}
-          variants={containerVariants}
-        >
-
-          {/* REPOSITORIES */}
-
-          <motion.div
-            className="github-signal"
-            variants={fadeUp}
-          >
-            <div className="github-signal-top">
-              <span className="github-signal-number">
-                {profile?.public_repos ?? repos.length}
-              </span>
-
-              <span className="github-signal-source">
-                GITHUB
-              </span>
-            </div>
-
-            <p>Public Repositories</p>
-
-            <div className="github-signal-line">
-              <span></span>
-            </div>
-          </motion.div>
-
-
-          {/* STARS */}
-
-          <motion.div
-            className="github-signal"
-            variants={fadeUp}
-          >
-            <div className="github-signal-top">
-              <span className="github-signal-number">
-                {totalStars}
-              </span>
-
-              <span className="github-signal-source">
-                GITHUB
-              </span>
-            </div>
-
-            <p>Total Stars</p>
-
-            <div className="github-signal-line">
-              <span></span>
-            </div>
-          </motion.div>
-
-
-          {/* FOLLOWERS */}
-
-          <motion.div
-            className="github-signal"
-            variants={fadeUp}
-          >
-            <div className="github-signal-top">
-              <span className="github-signal-number">
-                {profile?.followers ?? 0}
-              </span>
-
-              <span className="github-signal-source">
-                GITHUB
-              </span>
-            </div>
-
-            <p>Followers</p>
-
-            <div className="github-signal-line">
-              <span></span>
-            </div>
-          </motion.div>
-
-
-          {/* FORKS */}
-
-          <motion.div
-            className="github-signal"
-            variants={fadeUp}
-          >
-            <div className="github-signal-top">
-              <span className="github-signal-number">
-                {totalForks}
-              </span>
-
-              <span className="github-signal-source">
-                GITHUB
-              </span>
-            </div>
-
-            <p>Total Forks</p>
-
-            <div className="github-signal-line">
-              <span></span>
-            </div>
-          </motion.div>
-
-        </motion.div>
-
-
-        {/* =========================
-            DEVELOPMENT PROFILE
-        ========================= */}
-
-        <motion.div
-          className="github-profile"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.1 }}
-          variants={fadeUp}
-        >
-
-          <div className="github-profile-heading">
-            
-            <h3>DEVELOPMENT PROFILE</h3>
-          </div>
-
-
-          <div className="github-profile-grid">
-
-            {/* STREAK */}
-
-            <div className="github-profile-column">
-
-              <span className="github-profile-label">
-                CONTRIBUTION ACTIVITY
-              </span>
-
-              <div className="github-streak">
-                <img
-                  src={`https://github-readme-streak-stats.herokuapp.com/?user=${GITHUB_USERNAME}&theme=radical&background=0a0a0f&ring=E10600&fire=E10600&currStreakLabel=E10600&sideLabels=b0b0c0&dates=707088&border=1a1a2e&border_radius=12`}
-                  alt="GitHub contribution streak"
-                  loading="lazy"
-                />
+      <div className="section-shell">
+        <Header />
+        {state === "loading" && <div className="github-profile"><div className="github-loading">CONNECTING TO GITHUB...</div></div>}
+        {state === "error" && <div className="github-profile github-error"><FaGithub /><span>GITHUB DATA TEMPORARILY UNAVAILABLE</span><a className="cursor-can-hover" href={`https://github.com/${USERNAME}`} target="_blank" rel="noreferrer">OPEN GITHUB ↗</a></div>}
+        {state === "ready" && (
+          <>
+            <motion.div className="github-signals" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+              <div className="github-signal"><span className="github-signal-number">{profile?.public_repos ?? repos.length}</span><span className="github-signal-source">REPOSITORIES</span><p>Public projects</p><div className="github-signal-line"><span /></div></div>
+              <div className="github-signal"><span className="github-signal-number">{stats.stars}</span><span className="github-signal-source">STARS</span><p>Across public work</p><div className="github-signal-line"><span /></div></div>
+              <div className="github-signal"><span className="github-signal-number">{profile?.followers ?? 0}</span><span className="github-signal-source">FOLLOWERS</span><p>People following along</p><div className="github-signal-line"><span /></div></div>
+              <div className="github-signal"><span className="github-signal-number">{stats.forks}</span><span className="github-signal-source">FORKS</span><p>Shared experiments</p><div className="github-signal-line"><span /></div></div>
+            </motion.div>
+            <div className="github-profile">
+              <div className="github-profile-grid">
+                <div><span className="github-profile-label">LANGUAGE DISTRIBUTION</span><div className="github-languages">{languages.map(([name, percentage]) => <div className="github-language" key={name}><div className="github-language-top"><span><i style={{ background: colors[name] || "var(--accent)" }} />{name}</span><b>{percentage}%</b></div><div className="github-language-bar"><span style={{ width: `${percentage}%`, background: colors[name] || "var(--accent)" }} /></div></div>)}</div></div>
+                <div><span className="github-profile-label">CONTRIBUTION ACTIVITY</span><img className="github-streak" src={theme === "light" ? `https://github-readme-streak-stats.herokuapp.com/?user=${USERNAME}&theme=light&background=ffffff&ring=c9363d&fire=c9363d&currStreakLabel=3974a8&sideLabels=5c6876&dates=8994a2&border=dadee5` : `https://github-readme-streak-stats.herokuapp.com/?user=${USERNAME}&theme=dark&background=0d1320&ring=e94a4a&fire=e94a4a&currStreakLabel=8bb8e8&sideLabels=8c98a8&dates=566171&border=263247`} alt="GitHub contribution streak" loading="lazy" /></div>
               </div>
-
             </div>
-
-
-            {/* LANGUAGES */}
-
-            <div className="github-profile-column">
-
-              <span className="github-profile-label">
-                LANGUAGE DISTRIBUTION
-              </span>
-
-              <div className="github-languages">
-
-                {languages.length > 0 ? (
-                  languages.map(([language, count]) => {
-
-                    const percentage =
-                      totalLanguageRepos > 0
-                        ? (count / totalLanguageRepos) * 100
-                        : 0;
-
-                    return (
-                      <div
-                        className="github-language"
-                        key={language}
-                      >
-
-                        <div className="github-language-top">
-
-                          <span>
-                            <i
-                              style={{
-                                background:
-                                  languageColors[language] ||
-                                  "var(--primary-color)",
-                              }}
-                            ></i>
-
-                            {language}
-                          </span>
-
-                          <b>
-                            {Math.round(percentage)}%
-                          </b>
-
-                        </div>
-
-                        <div className="github-language-bar">
-                          <span
-                            style={{
-                              width: `${percentage}%`,
-                              background:
-                                languageColors[language] ||
-                                "var(--primary-color)",
-                            }}
-                          ></span>
-                        </div>
-
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="github-loading">
-                    NO LANGUAGE DATA
-                  </div>
-                )}
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </motion.div>
-
-
-        {/* =========================
-            RECENT WORK
-        ========================= */}
-
-        <motion.div
-          className="github-recent"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.1 }}
-          variants={fadeUp}
-        >
-
-          <div className="github-recent-heading">
-
-            <div>
-              <p>RECENT DEVELOPMENT</p>
-
-              <h3>Latest Repositories</h3>
-            </div>
-
-            <a
-              href={`https://github.com/${GITHUB_USERNAME}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              VIEW ALL ↗
-            </a>
-
-          </div>
-
-
-          <div className="github-repository-list">
-
-            {recentRepos.map((repo, index) => (
-
-              <a
-                key={repo.id}
-                className="github-repository"
-                href={repo.html_url}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-
-                <span className="github-repository-number">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-
-
-                <div className="github-repository-main">
-
-                  <h4>
-                    {repo.name}
-                    <FaGithub />
-                  </h4>
-
-                  <p>
-                    {repo.description ||
-                      "No repository description provided."}
-                  </p>
-
-                </div>
-
-
-                <div className="github-repository-meta">
-
-                  {repo.language && (
-                    <span>
-                      {repo.language}
-                    </span>
-                  )}
-
-                  <span>
-                    {formatDate(repo.updated_at)}
-                  </span>
-
-                </div>
-
-
-                <span className="github-repository-arrow">
-                  ↗
-                </span>
-
-              </a>
-
-            ))}
-
-          </div>
-
-        </motion.div>
-
-
+            <div className="github-recent"><div className="github-recent-heading"><div><p className="eyebrow">LATEST TRANSMISSIONS</p><h3>Recent repositories</h3></div><a className="cursor-can-hover" href={`https://github.com/${USERNAME}`} target="_blank" rel="noreferrer">VIEW PROFILE ↗</a></div><div className="github-repository-list">{repos.slice(0, 5).map((repo, index) => <a className="github-repository cursor-can-hover" href={repo.html_url} target="_blank" rel="noreferrer" key={repo.id}><span className="github-repository-number">{String(index + 1).padStart(2, "0")}</span><div><h4>{repo.name} <FaGithub /></h4><p>{repo.description || "No description provided."}</p></div><span className="github-repository-meta">{repo.language || "CODE"}<br />{new Date(repo.updated_at).toLocaleDateString("en-US", { month: "short", year: "numeric" })}</span><span className="github-repository-arrow">↗</span></a>)}</div></div>
+          </>
+        )}
       </div>
-
     </section>
   );
 }
