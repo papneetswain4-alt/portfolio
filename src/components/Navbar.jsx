@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { FiMoon, FiSun } from "react-icons/fi";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useVisitorCount } from "../hooks/useVisitorCount";
 
 const THEME_STORAGE_KEY = "portfolio-theme";
@@ -22,6 +23,8 @@ export default function Navbar() {
   const [theme, setTheme] = useState(getInitialTheme);
   const [, setLogoClicks] = useState(0);
   const { visitorCount, isEnabled } = useVisitorCount();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -35,6 +38,11 @@ export default function Navbar() {
   }, [theme]);
 
   useEffect(() => {
+    if (location.pathname.startsWith("/blog")) {
+      setActive("blog");
+      return;
+    }
+
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
 
@@ -49,12 +57,30 @@ export default function Navbar() {
     };
 
     window.addEventListener("scroll", handleScroll);
+    handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [location.pathname]);
+
+  // Handle hash scrolling when navigating back to home page
+  useEffect(() => {
+    if (location.pathname === "/" && location.hash) {
+      const targetId = location.hash.replace("#", "");
+      const el = document.getElementById(targetId);
+      if (el) {
+        window.setTimeout(() => {
+          el.scrollIntoView({ behavior: "smooth" });
+        }, 120);
+      }
+    }
+  }, [location]);
 
   const scrollTo = (id) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
     setMenuOpen(false);
+    if (location.pathname !== "/") {
+      navigate(`/#${id}`);
+    } else {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   const toggleTheme = () => {
@@ -74,6 +100,11 @@ export default function Navbar() {
   };
 
   const handleLogoClick = () => {
+    setMenuOpen(false);
+    if (location.pathname !== "/") {
+      navigate("/");
+      return;
+    }
     scrollTo("home");
     setLogoClicks((current) => {
       const next = current + 1;
@@ -84,6 +115,8 @@ export default function Navbar() {
       return next;
     });
   };
+
+  const isBlog = location.pathname.startsWith("/blog");
 
   return (
     <nav className={`navbar ${scrolled ? "navbar-scrolled" : ""}`}>
@@ -103,37 +136,37 @@ export default function Navbar() {
 
       <ul className={`nav-links ${menuOpen ? "open" : ""}`}>
         <li
-          className={`cursor-can-hover ${active === "about" ? "active" : ""}`}
+          className={`cursor-can-hover ${!isBlog && active === "about" ? "active" : ""}`}
           onClick={() => scrollTo("about")}
         >
           About
         </li>
         <li
-          className={`cursor-can-hover ${active === "tech" ? "active" : ""}`}
+          className={`cursor-can-hover ${!isBlog && active === "tech" ? "active" : ""}`}
           onClick={() => scrollTo("tech")}
         >
           Skills
         </li>
         <li
-          className={`cursor-can-hover ${active === "experience" ? "active" : ""}`}
+          className={`cursor-can-hover ${!isBlog && active === "experience" ? "active" : ""}`}
           onClick={() => scrollTo("experience")}
         >
           Journey
         </li>
         <li
-          className={`cursor-can-hover ${active === "projects" ? "active" : ""}`}
+          className={`cursor-can-hover ${!isBlog && active === "projects" ? "active" : ""}`}
           onClick={() => scrollTo("projects")}
         >
           Projects
         </li>
         <li
-          className={`cursor-can-hover ${active === "github" ? "active" : ""}`}
+          className={`cursor-can-hover ${!isBlog && active === "github" ? "active" : ""}`}
           onClick={() => scrollTo("github")}
         >
           GitHub
         </li>
         <li
-          className={`cursor-can-hover ${active === "contact" ? "active" : ""}`}
+          className={`cursor-can-hover ${!isBlog && active === "contact" ? "active" : ""}`}
           onClick={() => scrollTo("contact")}
         >
           Contact

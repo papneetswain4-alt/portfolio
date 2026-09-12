@@ -1,9 +1,11 @@
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { experience } from "../../data/experience";
+import { useScrollReveal } from "../../hooks/useScrollReveal";
 
 export default function Experience() {
   const timelineRef = useRef(null);
+  const headerRef = useScrollReveal();
 
   useEffect(() => {
     let frame;
@@ -22,10 +24,12 @@ export default function Experience() {
   return (
     <section className="experience" id="experience">
       <div className="section-shell">
-        <div className="section-marker"><span>03</span><i /><span>DEVELOPMENT JOURNEY</span></div>
-        <div className="section-heading">
-          <div><p>THE WORK BEHIND THE WORK</p><h2>Experience <em>&amp; growth</em></h2></div>
-          <p>Not a list of titles — a record of the systems, ideas, and engineering habits I keep developing.</p>
+        <div ref={headerRef}>
+          <div className="section-marker" data-reveal><span>03</span><i /><span>DEVELOPMENT JOURNEY</span></div>
+          <div className="section-heading" data-reveal data-scroll-heading>
+            <div><p>THE WORK BEHIND THE WORK</p><h2>Experience <em>&amp; growth</em></h2></div>
+            <p>Not a list of titles — a record of the systems, ideas, and engineering habits I keep developing.</p>
+          </div>
         </div>
         <div className="timeline" ref={timelineRef}>
           <div className="timeline-progress" aria-hidden="true" />

@@ -1,4 +1,5 @@
 import { FaEnvelope, FaGithub, FaLinkedin, FaArrowUp } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 export default function Footer() {
   return (
@@ -9,7 +10,10 @@ export default function Footer() {
             <h2>PAPNEET<span>.</span></h2>
             <p>Full Stack Developer / Building inside the galaxy</p>
           </div>
-          <a className="footer-contact cursor-can-hover" href="mailto:papneetswain4@gmail.com">LET&apos;S BUILD TOGETHER <FaArrowUp /></a>
+          <div className="footer-action-group">
+            <Link className="footer-blog-link cursor-can-hover" to="/blog">DISPATCHES / BLOG <FaArrowUp /></Link>
+            <a className="footer-contact cursor-can-hover" href="mailto:papneetswain4@gmail.com">LET&apos;S BUILD TOGETHER <FaArrowUp /></a>
+          </div>
         </div>
         <div className="footer-divider" />
         <div className="footer-bottom">

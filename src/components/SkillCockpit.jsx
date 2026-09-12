@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   FaCode,
   FaCss3Alt,
@@ -68,6 +68,7 @@ function HudCorners() {
 
 export default function SkillCockpit() {
   const sectionRef = useScrollReveal();
+  const reduceMotion = useReducedMotion();
   const [hoveredSkill, setHoveredSkill] = useState(null);
   const [pinnedSkill, setPinnedSkill] = useState(null);
   const displayedSkill = hoveredSkill || pinnedSkill;
@@ -107,10 +108,10 @@ export default function SkillCockpit() {
                   className="skill-cockpit-hud"
                   key={displayedSkill.name}
                   style={{ "--skill-color": displayedSkill.color }}
-                  initial={{ opacity: 0, x: -40 }}
+                  initial={reduceMotion ? { opacity: 0 } : { opacity: 0, x: -40 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 40 }}
-                  transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+                  exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: 40 }}
+                  transition={{ duration: reduceMotion ? 0.01 : 0.32, ease: [0.16, 1, 0.3, 1] }}
                 >
                   <HudCorners />
                   <span className="skill-cockpit-hud-kicker">MODULE PROJECTION // ONLINE</span>

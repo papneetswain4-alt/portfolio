@@ -1,18 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { FaGithub } from "react-icons/fa";
+import { useScrollReveal } from "../hooks/useScrollReveal";
 
 const USERNAME = "papneetswain4-alt";
 const colors = { JavaScript: "#f1e05a", Python: "#3572A5", HTML: "#e34c26", CSS: "#563d7c", Java: "#b07219", TypeScript: "#3178c6" };
 
 const Header = () => (
   <>
-    <div className="section-marker"><span>05</span><i /><span>GITHUB / OPEN SOURCE</span></div>
-    <div className="section-heading"><div><p>LIVE DEVELOPMENT SIGNALS</p><h2>Code in <em>motion</em></h2></div><p>A live, lightweight snapshot of the public work and technologies shaping my current orbit.</p></div>
+    <div className="section-marker" data-reveal><span>05</span><i /><span>GITHUB / OPEN SOURCE</span></div>
+    <div className="section-heading" data-reveal data-scroll-heading><div><p>LIVE DEVELOPMENT SIGNALS</p><h2>Code in <em>motion</em></h2></div><p>A live, lightweight snapshot of the public work and technologies shaping my current orbit.</p></div>
   </>
 );
 
 export default function GitHubActivity() {
+  const sectionRef = useScrollReveal();
   const [profile, setProfile] = useState(null);
   const [repos, setRepos] = useState([]);
   const [state, setState] = useState("loading");
@@ -60,7 +62,7 @@ export default function GitHubActivity() {
 
   return (
     <section className="github-activity" id="github">
-      <div className="section-shell">
+      <div className="section-shell" ref={sectionRef}>
         <Header />
         {state === "loading" && <div className="github-profile"><div className="github-loading">CONNECTING TO GITHUB...</div></div>}
         {state === "error" && <div className="github-profile github-error"><FaGithub /><span>GITHUB DATA TEMPORARILY UNAVAILABLE</span><a className="cursor-can-hover" href={`https://github.com/${USERNAME}`} target="_blank" rel="noreferrer">OPEN GITHUB ↗</a></div>}

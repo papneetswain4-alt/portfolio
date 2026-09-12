@@ -28,11 +28,12 @@ const getAngle = (diffX, diffY) => {
 };
 
 export default function ElasticCursor() {
-  // Checklist 6: Mobile detection - render null on mobile widths
-  const [isMobile, setIsMobile] = useState(() => {
+  // Checklist 6 & Reduced Motion: Disable custom cursor on mobile widths, touch devices, and prefers-reduced-motion
+  const [isDisabled, setIsDisabled] = useState(() => {
     if (typeof window === "undefined") return false;
     return (
       window.matchMedia("(max-width: 768px)").matches ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
       ("ontouchstart" in window && window.innerWidth <= 1024)
     );
   });
@@ -41,24 +42,30 @@ export default function ElasticCursor() {
   const blobRef = useRef(null);
 
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 768px)");
-    const updateMobile = () => {
-      setIsMobile(
-        mq.matches || ("ontouchstart" in window && window.innerWidth <= 1024)
+    const mqMobile = window.matchMedia("(max-width: 768px)");
+    const mqMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    const updateDisabled = () => {
+      setIsDisabled(
+        mqMobile.matches ||
+        mqMotion.matches ||
+        ("ontouchstart" in window && window.innerWidth <= 1024)
       );
     };
 
-    mq.addEventListener("change", updateMobile);
-    window.addEventListener("resize", updateMobile);
+    mqMobile.addEventListener("change", updateDisabled);
+    mqMotion.addEventListener("change", updateDisabled);
+    window.addEventListener("resize", updateDisabled);
 
     return () => {
-      mq.removeEventListener("change", updateMobile);
-      window.removeEventListener("resize", updateMobile);
+      mqMobile.removeEventListener("change", updateDisabled);
+      mqMotion.removeEventListener("change", updateDisabled);
+      window.removeEventListener("resize", updateDisabled);
     };
   }, []);
 
   useEffect(() => {
-    if (isMobile) return undefined;
+    if (isDisabled) return undefined;
 
     const dot = dotRef.current;
     const blob = blobRef.current;
@@ -337,10 +344,10 @@ export default function ElasticCursor() {
         releaseTarget(activeTarget);
       }
     };
-  }, [isMobile]);
+  }, [isDisabled]);
 
-  // Checklist 6: Mobile renders null
-  if (isMobile) {
+  // Checklist 6: Mobile / Touch / Reduced Motion renders null
+  if (isDisabled) {
     return null;
   }
 
