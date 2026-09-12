@@ -1,6 +1,6 @@
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Points, PointMaterial, Float } from "@react-three/drei";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
 /* =====================================================
@@ -89,12 +89,99 @@ const CORE_POSITION = new THREE.Vector3(
 
 
 /* =====================================================
+   THEME PALETTES & COLOR ADAPTATION
+===================================================== */
+
+const THEME_PALETTES = {
+  dark: {
+    clearColor: "#020308",
+    bgStars: "#f0f4f8",
+    glowStars: "#cbd5e1",
+    midWhite: "#ffffff",
+    midRed: "#ff3333",
+    coreSphere: "#ffffff",
+    coreRedWire: "#e10600",
+    coreOuterWire: "#aaaaaa",
+    ringInner: "#ffffff",
+    ringMid: "#e10600",
+    ringOuter: "#aaaaaa",
+    morphParticles: "#ffffff",
+    starOpacity: 0.7,
+    glowOpacity: 0.22,
+    midWhiteOpacity: 0.9,
+    midRedOpacity: 0.8,
+    coreSphereOpacity: 0.9,
+    coreRedWireOpacity: 0.15,
+    coreOuterWireOpacity: 0.08,
+    ringInnerOpacity: 0.15,
+    ringMidOpacity: 0.2,
+    ringOuterOpacity: 0.1,
+    morphOpacity: 0.42,
+    blending: THREE.AdditiveBlending,
+  },
+  light: {
+    clearColor: "#e8edf3",
+    bgStars: "#334155",
+    glowStars: "#475569",
+    midWhite: "#1e293b",
+    midRed: "#c9363d",
+    coreSphere: "#17202b",
+    coreRedWire: "#c9363d",
+    coreOuterWire: "#64748b",
+    ringInner: "#1e293b",
+    ringMid: "#c9363d",
+    ringOuter: "#64748b",
+    morphParticles: "#1e293b",
+    starOpacity: 0.45,
+    glowOpacity: 0.15,
+    midWhiteOpacity: 0.6,
+    midRedOpacity: 0.55,
+    coreSphereOpacity: 0.85,
+    coreRedWireOpacity: 0.2,
+    coreOuterWireOpacity: 0.12,
+    ringInnerOpacity: 0.18,
+    ringMidOpacity: 0.22,
+    ringOuterOpacity: 0.12,
+    morphOpacity: 0.45,
+    blending: THREE.NormalBlending,
+  },
+};
+
+function ThemeController({ palette }) {
+  const { gl } = useThree();
+  const targetClearColor = useMemo(
+    () => new THREE.Color(palette.clearColor),
+    [palette.clearColor]
+  );
+  const currentClearColor = useRef(new THREE.Color(palette.clearColor));
+
+  useEffect(() => {
+    gl.setClearColor(currentClearColor.current, 1);
+  }, [gl]);
+
+  useFrame((_, delta) => {
+    const factor = THREE.MathUtils.clamp(delta * 7, 0, 1);
+    currentClearColor.current.lerp(targetClearColor, factor);
+    gl.setClearColor(currentClearColor.current, 1);
+  });
+
+  return null;
+}
+
+
+/* =====================================================
    LAYER 1: BACKGROUND STARS
 ===================================================== */
 
-function BackgroundStars() {
+function BackgroundStars({ palette }) {
   const pointsRef = useRef();
+  const materialRef = useRef();
   const { mouse } = useThree();
+
+  const targetColor = useMemo(
+    () => new THREE.Color(palette.bgStars),
+    [palette.bgStars]
+  );
 
   const particleCount = typeof window !== "undefined" && window.innerWidth < 768 ? 1500 : 3000;
 
@@ -274,6 +361,20 @@ function BackgroundStars() {
         targetScale -
         pointsRef.current.scale.z
       ) * 0.02;
+
+    if (materialRef.current) {
+      const factor = THREE.MathUtils.clamp(state.clock.getDelta ? 0.04 : 0.04, 0, 1);
+      materialRef.current.color.lerp(targetColor, 0.08);
+      materialRef.current.opacity = THREE.MathUtils.lerp(
+        materialRef.current.opacity,
+        palette.starOpacity,
+        0.08
+      );
+      if (materialRef.current.blending !== palette.blending) {
+        materialRef.current.blending = palette.blending;
+        materialRef.current.needsUpdate = true;
+      }
+    }
   });
 
   return (
@@ -284,13 +385,14 @@ function BackgroundStars() {
       frustumCulled={false}
     >
       <PointMaterial
+        ref={materialRef}
         transparent
-        color="#aaccff"
+        color={palette.bgStars}
         size={0.025}
         sizeAttenuation
         depthWrite={false}
-        opacity={0.7}
-        blending={THREE.AdditiveBlending}
+        opacity={palette.starOpacity}
+        blending={palette.blending}
       />
     </Points>
   );
@@ -301,11 +403,17 @@ function BackgroundStars() {
    LAYER 1.5: SLOW DRIFTING GLOW STARS
 ===================================================== */
 
-function DriftingGlowStars() {
+function DriftingGlowStars({ palette }) {
   const pointsRef = useRef();
+  const materialRef = useRef();
   const { mouse } = useThree();
   const isCompact = typeof window !== "undefined" && window.innerWidth < 768;
   const glowCount = isCompact ? 7 : 16;
+
+  const targetColor = useMemo(
+    () => new THREE.Color(palette.glowStars),
+    [palette.glowStars]
+  );
 
   const positions = useMemo(() => {
     const data = new Float32Array(glowCount * 3);
@@ -332,6 +440,19 @@ function DriftingGlowStars() {
     pointsRef.current.position.y += (targetY - pointsRef.current.position.y) * 0.018;
     pointsRef.current.position.z += (-scrollState.current * 0.00058 - pointsRef.current.position.z) * 0.012;
     pointsRef.current.rotation.z = Math.sin(time * 0.035) * 0.025;
+
+    if (materialRef.current) {
+      materialRef.current.color.lerp(targetColor, 0.08);
+      materialRef.current.opacity = THREE.MathUtils.lerp(
+        materialRef.current.opacity,
+        palette.glowOpacity,
+        0.08
+      );
+      if (materialRef.current.blending !== palette.blending) {
+        materialRef.current.blending = palette.blending;
+        materialRef.current.needsUpdate = true;
+      }
+    }
   });
 
   return (
@@ -342,13 +463,14 @@ function DriftingGlowStars() {
       frustumCulled={false}
     >
       <PointMaterial
+        ref={materialRef}
         transparent
-        color="#aaccff"
+        color={palette.glowStars}
         size={0.12}
         sizeAttenuation
         depthWrite={false}
-        opacity={0.22}
-        blending={THREE.AdditiveBlending}
+        opacity={palette.glowOpacity}
+        blending={palette.blending}
       />
     </Points>
   );
@@ -359,11 +481,22 @@ function DriftingGlowStars() {
    LAYER 2: MIDGROUND STARS
 ===================================================== */
 
-function MidgroundStars() {
+function MidgroundStars({ palette }) {
   const whitePointsRef = useRef();
   const redPointsRef = useRef();
+  const whiteMatRef = useRef();
+  const redMatRef = useRef();
 
   const { mouse } = useThree();
+
+  const targetWhiteColor = useMemo(
+    () => new THREE.Color(palette.midWhite),
+    [palette.midWhite]
+  );
+  const targetRedColor = useMemo(
+    () => new THREE.Color(palette.midRed),
+    [palette.midRed]
+  );
 
   const isCompact = typeof window !== "undefined" && window.innerWidth < 768;
   const whiteCount = isCompact ? 750 : 1500;
@@ -636,6 +769,32 @@ function MidgroundStars() {
           redPointsRef.current.position.z
         ) * 0.03;
     }
+
+    if (whiteMatRef.current) {
+      whiteMatRef.current.color.lerp(targetWhiteColor, 0.08);
+      whiteMatRef.current.opacity = THREE.MathUtils.lerp(
+        whiteMatRef.current.opacity,
+        palette.midWhiteOpacity,
+        0.08
+      );
+      if (whiteMatRef.current.blending !== palette.blending) {
+        whiteMatRef.current.blending = palette.blending;
+        whiteMatRef.current.needsUpdate = true;
+      }
+    }
+
+    if (redMatRef.current) {
+      redMatRef.current.color.lerp(targetRedColor, 0.08);
+      redMatRef.current.opacity = THREE.MathUtils.lerp(
+        redMatRef.current.opacity,
+        palette.midRedOpacity,
+        0.08
+      );
+      if (redMatRef.current.blending !== palette.blending) {
+        redMatRef.current.blending = palette.blending;
+        redMatRef.current.needsUpdate = true;
+      }
+    }
   });
 
 
@@ -648,13 +807,14 @@ function MidgroundStars() {
         frustumCulled={false}
       >
         <PointMaterial
+          ref={whiteMatRef}
           transparent
-          color="#ffffff"
+          color={palette.midWhite}
           size={0.035}
           sizeAttenuation
           depthWrite={false}
-          opacity={0.9}
-          blending={THREE.AdditiveBlending}
+          opacity={palette.midWhiteOpacity}
+          blending={palette.blending}
         />
       </Points>
 
@@ -666,13 +826,14 @@ function MidgroundStars() {
         frustumCulled={false}
       >
         <PointMaterial
+          ref={redMatRef}
           transparent
-          color="#ff3333"
+          color={palette.midRed}
           size={0.05}
           sizeAttenuation
           depthWrite={false}
-          opacity={0.8}
-          blending={THREE.AdditiveBlending}
+          opacity={palette.midRedOpacity}
+          blending={palette.blending}
         />
       </Points>
     </>
@@ -689,9 +850,25 @@ function MidgroundStars() {
    STEP 6.1 — INTERACTIVE CORE PHYSICS
 ===================================================== */
 
-function CentralCore() {
+function CentralCore({ palette }) {
   const groupRef = useRef();
   const coreOpacity = useRef(1);
+  const outerWireMatRef = useRef();
+  const innerWireMatRef = useRef();
+  const coreSphereMatRef = useRef();
+
+  const targetOuterWireColor = useMemo(
+    () => new THREE.Color(palette.coreOuterWire),
+    [palette.coreOuterWire]
+  );
+  const targetInnerWireColor = useMemo(
+    () => new THREE.Color(palette.coreRedWire),
+    [palette.coreRedWire]
+  );
+  const targetCoreSphereColor = useMemo(
+    () => new THREE.Color(palette.coreSphere),
+    [palette.coreSphere]
+  );
 
   const { mouse } = useThree();
 
@@ -966,6 +1143,34 @@ function CentralCore() {
         targetScale -
         groupRef.current.scale.z
       ) * 0.04;
+
+    if (outerWireMatRef.current) {
+      outerWireMatRef.current.color.lerp(targetOuterWireColor, 0.08);
+      const curBase = outerWireMatRef.current.userData.coreBaseOpacity ?? palette.coreOuterWireOpacity;
+      outerWireMatRef.current.userData.coreBaseOpacity = THREE.MathUtils.lerp(
+        curBase,
+        palette.coreOuterWireOpacity,
+        0.08
+      );
+    }
+    if (innerWireMatRef.current) {
+      innerWireMatRef.current.color.lerp(targetInnerWireColor, 0.08);
+      const curBase = innerWireMatRef.current.userData.coreBaseOpacity ?? palette.coreRedWireOpacity;
+      innerWireMatRef.current.userData.coreBaseOpacity = THREE.MathUtils.lerp(
+        curBase,
+        palette.coreRedWireOpacity,
+        0.08
+      );
+    }
+    if (coreSphereMatRef.current) {
+      coreSphereMatRef.current.color.lerp(targetCoreSphereColor, 0.08);
+      const curBase = coreSphereMatRef.current.userData.coreBaseOpacity ?? palette.coreSphereOpacity;
+      coreSphereMatRef.current.userData.coreBaseOpacity = THREE.MathUtils.lerp(
+        curBase,
+        palette.coreSphereOpacity,
+        0.08
+      );
+    }
   });
 
 
@@ -994,10 +1199,11 @@ function CentralCore() {
           />
 
           <meshBasicMaterial
-            color="#aaaaaa"
+            ref={outerWireMatRef}
+            color={palette.coreOuterWire}
             wireframe
             transparent
-            opacity={0.08}
+            opacity={palette.coreOuterWireOpacity}
             depthWrite={false}
           />
         </mesh>
@@ -1013,10 +1219,11 @@ function CentralCore() {
           />
 
           <meshBasicMaterial
-            color="#e10600"
+            ref={innerWireMatRef}
+            color={palette.coreRedWire}
             wireframe
             transparent
-            opacity={0.15}
+            opacity={palette.coreRedWireOpacity}
             depthWrite={false}
           />
         </mesh>
@@ -1032,9 +1239,10 @@ function CentralCore() {
           />
 
           <meshBasicMaterial
-            color="#ffffff"
+            ref={coreSphereMatRef}
+            color={palette.coreSphere}
             transparent
-            opacity={0.9}
+            opacity={palette.coreSphereOpacity}
             depthWrite={false}
           />
         </mesh>
@@ -1053,8 +1261,24 @@ function CentralCore() {
    STEP 6.2 — CORE ↔ RING INTERACTION
 ===================================================== */
 
-function OrbitingRings() {
+function OrbitingRings({ palette }) {
   const groupRef = useRef();
+  const innerRingMatRef = useRef();
+  const midRingMatRef = useRef();
+  const outerRingMatRef = useRef();
+
+  const targetInnerRingColor = useMemo(
+    () => new THREE.Color(palette.ringInner),
+    [palette.ringInner]
+  );
+  const targetMidRingColor = useMemo(
+    () => new THREE.Color(palette.ringMid),
+    [palette.ringMid]
+  );
+  const targetOuterRingColor = useMemo(
+    () => new THREE.Color(palette.ringOuter),
+    [palette.ringOuter]
+  );
 
   const { mouse } = useThree();
 
@@ -1280,6 +1504,31 @@ function OrbitingRings() {
         targetScale -
         groupRef.current.scale.z
       ) * 0.03;
+
+    if (innerRingMatRef.current) {
+      innerRingMatRef.current.color.lerp(targetInnerRingColor, 0.08);
+      innerRingMatRef.current.opacity = THREE.MathUtils.lerp(
+        innerRingMatRef.current.opacity,
+        palette.ringInnerOpacity,
+        0.08
+      );
+    }
+    if (midRingMatRef.current) {
+      midRingMatRef.current.color.lerp(targetMidRingColor, 0.08);
+      midRingMatRef.current.opacity = THREE.MathUtils.lerp(
+        midRingMatRef.current.opacity,
+        palette.ringMidOpacity,
+        0.08
+      );
+    }
+    if (outerRingMatRef.current) {
+      outerRingMatRef.current.color.lerp(targetOuterRingColor, 0.08);
+      outerRingMatRef.current.opacity = THREE.MathUtils.lerp(
+        outerRingMatRef.current.opacity,
+        palette.ringOuterOpacity,
+        0.08
+      );
+    }
   });
 
 
@@ -1314,9 +1563,10 @@ function OrbitingRings() {
         />
 
         <meshBasicMaterial
-          color="#ffffff"
+          ref={innerRingMatRef}
+          color={palette.ringInner}
           transparent
-          opacity={0.15}
+          opacity={palette.ringInnerOpacity}
           depthWrite={false}
         />
       </mesh>
@@ -1343,9 +1593,10 @@ function OrbitingRings() {
         />
 
         <meshBasicMaterial
-          color="#e10600"
+          ref={midRingMatRef}
+          color={palette.ringMid}
           transparent
-          opacity={0.2}
+          opacity={palette.ringMidOpacity}
           depthWrite={false}
         />
       </mesh>
@@ -1372,9 +1623,10 @@ function OrbitingRings() {
         />
 
         <meshBasicMaterial
-          color="#aaaaaa"
+          ref={outerRingMatRef}
+          color={palette.ringOuter}
           transparent
-          opacity={0.1}
+          opacity={palette.ringOuterOpacity}
           depthWrite={false}
         />
       </mesh>
@@ -1388,10 +1640,16 @@ function OrbitingRings() {
    LAYER 5: CORE PARTICLE FIELD
 ===================================================== */
 
-function MorphParticles() {
+function MorphParticles({ palette }) {
   const pointsRef = useRef();
+  const materialRef = useRef();
 
   const { mouse } = useThree();
+
+  const targetColor = useMemo(
+    () => new THREE.Color(palette.morphParticles),
+    [palette.morphParticles]
+  );
 
   const particleCount = typeof window !== "undefined" && window.innerWidth < 768 ? 500 : 1200;
 
@@ -1665,6 +1923,19 @@ function MorphParticles() {
         focus * 0.008
       ) +
       pageProgress * 0.025;
+
+    if (materialRef.current) {
+      materialRef.current.color.lerp(targetColor, 0.08);
+      materialRef.current.opacity = THREE.MathUtils.lerp(
+        materialRef.current.opacity,
+        palette.morphOpacity,
+        0.08
+      );
+      if (materialRef.current.blending !== palette.blending) {
+        materialRef.current.blending = palette.blending;
+        materialRef.current.needsUpdate = true;
+      }
+    }
   });
 
 
@@ -1681,13 +1952,14 @@ function MorphParticles() {
       ]}
     >
       <PointMaterial
+        ref={materialRef}
         transparent
-        color="#ffffff"
+        color={palette.morphParticles}
         size={0.028}
         sizeAttenuation
         depthWrite={false}
-        opacity={0.42}
-        blending={THREE.AdditiveBlending}
+        opacity={palette.morphOpacity}
+        blending={palette.blending}
       />
     </Points>
   );
@@ -2322,7 +2594,46 @@ function CameraController() {
    MAIN COMPONENT
 ===================================================== */
 
+function getInitialTheme() {
+  if (typeof document !== "undefined") {
+    const dataTheme = document.documentElement.dataset.theme;
+    if (dataTheme) return dataTheme;
+    if (document.documentElement.classList.contains("light")) return "light";
+    const saved = localStorage.getItem("theme");
+    if (saved) return saved;
+  }
+  return "dark";
+}
+
 export default function WebBackground() {
+  const [theme, setTheme] = useState(getInitialTheme);
+
+  useEffect(() => {
+    const handleThemeChange = (e) => {
+      const newTheme = e.detail?.theme || document.documentElement.dataset.theme || "dark";
+      setTheme(newTheme);
+    };
+
+    window.addEventListener("portfolio-theme-change", handleThemeChange);
+
+    const observer = new MutationObserver(() => {
+      const currentTheme = document.documentElement.dataset.theme || "dark";
+      setTheme(currentTheme);
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme", "class"],
+    });
+
+    return () => {
+      window.removeEventListener("portfolio-theme-change", handleThemeChange);
+      observer.disconnect();
+    };
+  }, []);
+
+  const palette = THEME_PALETTES[theme] || THEME_PALETTES.dark;
+
   return (
     <div className="web-background">
 
@@ -2348,7 +2659,7 @@ export default function WebBackground() {
 
         gl={{
           antialias: true,
-          alpha: true,
+          alpha: false,
           powerPreference:
             "high-performance"
         }}
@@ -2359,6 +2670,8 @@ export default function WebBackground() {
         {/* =================================================
             CONTROLLERS
         ================================================= */}
+
+        <ThemeController palette={palette} />
 
         <PageVisibilityController />
 
@@ -2377,22 +2690,22 @@ export default function WebBackground() {
             UNIVERSE
         ================================================= */}
 
-        <BackgroundStars />
+        <BackgroundStars palette={palette} />
 
-        <DriftingGlowStars />
+        <DriftingGlowStars palette={palette} />
 
-        <MidgroundStars />
+        <MidgroundStars palette={palette} />
 
 
         {/* =================================================
             CORE UNIVERSE
         ================================================= */}
 
-        <MorphParticles />
+        <MorphParticles palette={palette} />
 
-        <CentralCore />
+        <CentralCore palette={palette} />
 
-        <OrbitingRings />
+        <OrbitingRings palette={palette} />
 
       </Canvas>
 

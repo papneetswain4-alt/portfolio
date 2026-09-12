@@ -50,15 +50,8 @@ button, input, textarea { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 a { color: inherit; text-decoration: none; }
 button { color: inherit; }
-.web-background { position: fixed; inset: 0; z-index: -2; pointer-events: none; opacity: 1; transition: opacity .45s var(--ease), visibility .45s var(--ease); }
+.web-background { position: fixed; inset: 0; z-index: -2; pointer-events: none; }
 .web-background::after { content: ""; position: absolute; inset: 0; background: transparent; pointer-events: none; }
-:root[data-theme="light"] .web-background,
-html[data-theme="light"] .web-background,
-body[data-theme="light"] .web-background {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
 
 .elastic-cursor-dot, .elastic-cursor-blob { position: fixed; top: 0; left: 0; z-index: 10001; pointer-events: none; opacity: 0; backdrop-filter: invert(100%); -webkit-backdrop-filter: invert(100%); will-change: transform, width, height, border-radius, opacity; }
 .elastic-cursor-dot { width: 12px; height: 12px; border-radius: 50%; background: transparent; }
@@ -111,10 +104,10 @@ body[data-theme="light"] .web-background {
 @keyframes context-hint-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes context-hint-out { to { opacity: 0; transform: translateY(8px); } }
 
-.hero { min-height: 100svh; display: flex; align-items: center; padding: 8rem max(8vw, 32px) 5rem; overflow: hidden; }
+.hero { position: relative; min-height: 100svh; display: flex; align-items: center; padding: 8rem max(8vw, 32px) 5rem; overflow: hidden; }
 .hero-grid { position: absolute; inset: 0; opacity: .18; background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px); background-size: 90px 90px; mask-image: linear-gradient(90deg, #000, transparent 75%); }
-.section-atmosphere { position: absolute; z-index: -1; width: min(42vw, 560px); height: min(42vw, 560px); pointer-events: none; opacity: .18; filter: blur(44px); border-radius: 50%; background: radial-gradient(circle, var(--blue), transparent 68%); }
-:root[data-theme="light"] .section-atmosphere { opacity: .08; }
+.section-atmosphere { position: absolute; z-index: -1; width: min(42vw, 560px); height: min(42vw, 560px); pointer-events: none; opacity: .1; filter: blur(44px); border-radius: 50%; background: radial-gradient(circle, var(--line-strong), transparent 68%); }
+:root[data-theme="light"] .section-atmosphere { opacity: .05; }
 .about-atmosphere { top: 12%; right: -12%; }
 .projects-atmosphere { top: 20%; left: -14%; background: radial-gradient(circle, var(--accent-soft), transparent 68%); }
 .hero-content { position: relative; z-index: 1; width: min(740px, 100%); }
@@ -137,7 +130,7 @@ body[data-theme="light"] .web-background {
 .hero-links a { display: inline-flex; align-items: center; gap: .5rem; transition: .25s; }
 .hero-links a:hover { color: var(--text); }
 .hero-link-dot { width: 5px; height: 5px; margin: 0; background: #65d695; box-shadow: 0 0 10px #65d695; }
-.hero-aside { position: absolute; right: max(5vw, 28px); bottom: 5rem; display: flex; flex-direction: column; gap: .5rem; color: var(--muted); writing-mode: vertical-rl; }
+.hero-aside { position: absolute; right: max(5vw, 28px); bottom: 5rem; display: flex; flex-direction: column; gap: .5rem; color: var(--muted); writing-mode: vertical-rl; text-shadow: none; box-shadow: none; filter: none; }
 .scroll-cue { position: absolute; bottom: 3rem; left: max(8vw, 32px); display: flex; align-items: center; gap: .9rem; border: 0; color: var(--muted); background: transparent; cursor: pointer; }
 .scroll-cue svg { color: var(--accent); animation: bob 1.8s ease-in-out infinite; }
 @keyframes bob { 50% { transform: translateY(5px); } }
@@ -156,7 +149,7 @@ body[data-theme="light"] .web-background {
 .section-heading p:first-child { margin: 0 0 1rem; color: var(--accent); font: 10px var(--mono); letter-spacing: .15em; }
 .section-heading h2 { margin: 0; font-size: clamp(2.5rem, 6vw, 5.5rem); letter-spacing: -.08em; line-height: .95; }
 .section-heading > p { margin: 0; color: var(--muted); max-width: 360px; }
-.about, .tech-arsenal, .experience, .projects, .github-activity, .contact { padding: 8rem 0; }
+.about, .tech-arsenal, .experience, .projects, .github-activity, .contact { position: relative; overflow: hidden; padding: 8rem 0; }
 
 .about-main { display: grid; grid-template-columns: 1.15fr .85fr; gap: 5rem; }
 .about-intro h2 { max-width: 760px; margin: 0 0 1.5rem; font-size: clamp(2rem, 4vw, 4rem); line-height: 1.05; letter-spacing: -.07em; }
